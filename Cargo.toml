@@ -1,0 +1,9 @@
+[package]
+name = "wget"
+version = "0.1.0"
+authors = ["Lukasz <lukasz.wawrzyk@gmail.com>"]
+
+[dependencies]
+
+[dependencies.url]
+git = "https://github.com/servo/rust-url"

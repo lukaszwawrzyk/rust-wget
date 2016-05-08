@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Rust &lt;wget&gt;">
+    <CLASSES>
+      <root url="file:///opt/rustc-1.8.0/src/libstd" />
+      <root url="file:///opt/rustc-1.8.0/src/libcore" />
+      <root url="file:///opt/rustc-1.8.0/src/libcollections" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
