@@ -21,6 +21,12 @@ macro_rules! str_err {
   };
 }
 
+macro_rules! try_str {
+  ($e:expr) => {
+    try!($e.map_err(|err| err.to_string()));
+  };
+}
+
 // REQUEST
 
 struct Request {
@@ -55,14 +61,14 @@ impl ResponseHead {
 }
 
 pub struct Response {
-  socket: TcpStream,
+  reader: BufReader<TcpStream>,
 }
 
 const BUFFER_SIZE: usize = 512;
 
 impl Response {
   pub fn new(socket: TcpStream) -> Response {
-    Response { socket: socket }
+    Response { reader: BufReader::new(socket) }
   }
 
   pub fn download(&mut self, destination: &mut Write) -> Result<()> {
@@ -74,7 +80,7 @@ impl Response {
 
     let mut total_bytes_read: u64 = 0;
     loop {
-      let bytes_read: usize = try!(str_err!(self.socket.read(&mut buffer)));
+      let bytes_read: usize = try_str!(self.reader.read(&mut buffer));
 
       if bytes_read == 0 {
         if total_bytes_read != content_length {
@@ -84,7 +90,7 @@ impl Response {
         }
       }
 
-      try!(str_err!(destination.write_all(&buffer[0..bytes_read])));
+      try_str!(destination.write_all(&buffer[0..bytes_read]));
 
       total_bytes_read += bytes_read as u64;
 
@@ -94,7 +100,7 @@ impl Response {
     }
   }
 
-  fn get_head(&self) -> Result<ResponseHead> {
+  fn get_head(&mut self) -> Result<ResponseHead> {
     self.read_raw_head().and_then(|raw_head| {
       match &raw_head[..] {
         [ref status_line, raw_headers..] =>
@@ -127,16 +133,23 @@ impl Response {
     }).collect()
   }
 
-  fn read_raw_head(&self) -> Result<Vec<String>> {
-    let response = BufReader::new(&self.socket);
+  fn read_raw_head(&mut self) -> Result<Vec<String>> {
+    let mut headers: Vec<String> = Vec::new();
+    loop {
+      let mut line = String::new();
+      try_str!(self.reader.read_line(&mut line));
 
-    let headers: io::Result<Vec<String>> = response.lines()
-      .take_while(|res| match *res {
-        Ok(ref line) if !line.is_empty() => true,
-        _ => false
-      }).collect();
+      if line.ends_with("\r\n") {
+        let len = line.len();
+        line.truncate(len - 2);
+      }
 
-    str_err!(headers)
+      if line.is_empty() {
+        return Ok(headers);
+      } else {
+        headers.push(line);
+      }
+    }
   }
 }
 
@@ -144,7 +157,7 @@ impl Response {
 
 
 fn download(source_url: &str, target_file: &str) -> Result<()> {
-  let mut destination = try!(str_err!(File::create(Path::new(target_file))));
+  let mut destination = try_str!(File::create(Path::new(target_file)));
 
   let url = try!(parse_url(source_url));
   let mut socket = try!(connect(&url));
