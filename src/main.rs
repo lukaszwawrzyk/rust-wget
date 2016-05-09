@@ -58,43 +58,63 @@ impl ResponseHead {
   fn content_length(&self) -> Option<u64> {
     self.headers.get("Content-Length").and_then(|num| num.parse::<u64>().ok())
   }
-}
 
-pub struct Response {
-  reader: BufReader<TcpStream>,
+  fn is_chunked(&self) -> bool {
+    self.headers.get("Transfer-Encoding").map_or(false, |encoding| encoding == "chunked")
+  }
 }
 
 const BUFFER_SIZE: usize = 512;
 
+pub struct Response {
+  reader: BufReader<TcpStream>,
+  buffer: [u8; BUFFER_SIZE],
+}
+
 impl Response {
   pub fn new(socket: TcpStream) -> Response {
-    Response { reader: BufReader::new(socket) }
+    Response {
+      reader: BufReader::new(socket),
+      buffer: [0; BUFFER_SIZE],
+    }
   }
 
   pub fn download(&mut self, destination: &mut Write) -> Result<()> {
     let response_head = try!(self.get_head());
+    match response_head.content_length() {
+      Some(content_length) =>
+        self.download_fixed_bytes(content_length, destination),
+      None =>
+        if response_head.is_chunked() {
+          Self::download_chunked()
+        } else {
+          Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
+        }
+    }
+  }
 
-    let content_length = try!(response_head.content_length().ok_or("No content length".to_owned()));
+  fn download_chunked() -> Result<()> {
+    Ok(())
+  }
 
-    let mut buffer: [u8; BUFFER_SIZE] = [0; BUFFER_SIZE];
-
+  fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write) -> Result<()> {
     let mut total_bytes_read: u64 = 0;
     loop {
-      let bytes_read: usize = try_str!(self.reader.read(&mut buffer));
+      let bytes_read: usize = try_str!(self.reader.read(&mut self.buffer[..]));
 
       if bytes_read == 0 {
-        if total_bytes_read != content_length {
-          return Err(format!("Failed to read expected number of bytes. Read {} of {}", total_bytes_read, content_length));
+        if total_bytes_read != expected_length {
+          return Err(format!("Failed to read expected number of bytes. Read {} of {}", total_bytes_read, expected_length));
         } else {
           return Ok(());
         }
       }
 
-      try_str!(destination.write_all(&buffer[0..bytes_read]));
+      try_str!(destination.write_all(&self.buffer[0..bytes_read]));
 
       total_bytes_read += bytes_read as u64;
 
-      if total_bytes_read >= content_length {
+      if total_bytes_read >= expected_length {
         return Ok(());
       }
     }
@@ -153,14 +173,11 @@ impl Response {
   }
 }
 
-
-
-
 fn download(source_url: &str, target_file: &str) -> Result<()> {
-  let mut destination = try_str!(File::create(Path::new(target_file)));
-
-  let url = try!(parse_url(source_url));
+  let url = try_str!(Url::parse(source_url));
   let mut socket = try!(connect(&url));
+
+  let mut destination = try_str!(File::create(Path::new(target_file)));
 
   let request = try!(Request::format(&url));
   try!(request.send(&mut socket));
@@ -168,34 +185,28 @@ fn download(source_url: &str, target_file: &str) -> Result<()> {
   let mut response = Response::new(socket);
 
   return response.download(&mut destination);
-}
 
-fn connect(url: &Url) -> Result<TcpStream> {
-  fn default_port(url: &Url) -> result::Result<u16, ()> {
-    match url.scheme() {
-      "https" => Ok(443),
-      "http" => Ok(80),
-      _ => Err(()),
+  fn connect(url: &Url) -> Result<TcpStream> {
+    fn default_port(url: &Url) -> result::Result<u16, ()> {
+      match url.scheme() {
+        "https" => Ok(443),
+        "http" => Ok(80),
+        _ => Err(()),
+      }
     }
+
+    let socket = url.with_default_port(default_port).and_then(TcpStream::connect);
+
+    str_err!(socket)
   }
-
-  let socket = url.with_default_port(default_port)
-    .and_then(|address| TcpStream::connect(address)); // TODO see if can simplify
-
-  str_err!(socket)
 }
-
-fn parse_url(url: &str) -> Result<Url> {
-  str_err!(Url::parse(url))
-}
-
 
 fn main() {
   let source_url = "http://google.com/";
   let target_file = "google.html";
 
   match download(source_url, target_file) {
-    Ok(headers) => println!("{:?}", headers),
+    Ok(_) => println!("Download success!"),
     Err(e) => println!("{}", e),
   }
 }
