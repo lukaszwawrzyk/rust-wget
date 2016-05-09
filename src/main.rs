@@ -11,8 +11,6 @@ use url::Url;
 use std::result;
 use std::collections::HashMap;
 
-// HELPERS
-
 pub type Result<T> = result::Result<T, String>;
 
 macro_rules! str_err {
@@ -26,8 +24,6 @@ macro_rules! try_str {
     try!($e.map_err(|err| err.to_string()));
   };
 }
-
-// REQUEST
 
 struct Request {
   content: String,
@@ -46,8 +42,6 @@ impl Request {
     str_err!(socket.write(bytes).map(|_| ()))
   }
 }
-
-// RESPONSE
 
 struct ResponseHead {
   status_code: u16,
@@ -79,14 +73,17 @@ impl Response {
     }
   }
 
-  pub fn download(&mut self, destination: &mut Write) -> Result<()> {
+  pub fn download(&mut self, destination_path: &Path) -> Result<()> {
     let response_head = try!(self.get_head());
     match response_head.content_length() {
-      Some(content_length) =>
-        self.download_fixed_bytes(content_length, destination),
+      Some(content_length) => {
+        let mut destination = try_str!(File::create(destination_path));
+        self.download_fixed_bytes(content_length, &mut destination)
+      },
       None =>
         if response_head.is_chunked() {
-          self.download_chunked(destination)
+          let mut destination = try_str!(File::create(destination_path));
+          self.download_chunked(&mut destination)
         } else {
           Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
         }
@@ -97,21 +94,15 @@ impl Response {
     loop {
       let chunk_size = try!(self.read_line_r_n()
         .and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
-      println!("Chunk size: {:?}", chunk_size);
 
-      println!("Downloading {:?} bytes", chunk_size);
       try!(self.download_fixed_bytes(chunk_size, destination));
-      println!("Eating rn");
       try!(self.eat_r_n());
 
       if chunk_size == 0 {
-        println!("CHUNK SIZE WAS 0");
         return Ok(());
       }
     }
   }
-
-  // TODO ZROBIC B REF DO HEADERÓW
 
   fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write) -> Result<()> {
     let mut total_bytes_read: u64 = 0;
@@ -176,16 +167,13 @@ impl Response {
   }
 
   fn read_raw_head(&mut self) -> Result<Vec<String>> {
-    let mut headers: Vec<String> = Vec::new();
-    loop {
-      let line = try!(self.read_line_r_n());
+    let headers: io::Result<Vec<String>> = self.reader.by_ref().lines()
+      .take_while(|res| match *res {
+        Ok(ref line) if !line.is_empty() => true,
+        _ => false
+      }).collect();
 
-      if line.is_empty() {
-        return Ok(headers);
-      } else {
-        headers.push(line);
-      }
-    }
+    str_err!(headers)
   }
 
   fn read_line_r_n(&mut self) -> Result<String> {
@@ -210,23 +198,32 @@ impl Response {
   }
 }
 
-fn download(source_url: &str, target_file: &str) -> Result<()> {
+const DEFAULT_FILE_NAME: &'static str = "out";
+
+fn download(source_url: &str) -> Result<()> {
   let url = try_str!(Url::parse(source_url));
   let mut socket = try!(connect(&url));
-
-  let mut destination = try_str!(File::create(Path::new(target_file)));
+  let file_name = get_file_name(&url);
+  let destination_path = Path::new(&file_name);
 
   let request = try!(Request::format(&url));
   try!(request.send(&mut socket));
 
   let mut response = Response::new(socket);
+  return response.download(&destination_path);
 
-  return response.download(&mut destination);
+
+
+  fn get_file_name(url: &Url) -> String {
+    url.path_segments()
+      .and_then(|segments| segments.last())
+      .map(|s| s.to_string())
+      .unwrap_or(DEFAULT_FILE_NAME.to_string())
+  }
 
   fn connect(url: &Url) -> Result<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
       match url.scheme() {
-        "https" => Ok(443),
         "http" => Ok(80),
         _ => Err(()),
       }
@@ -239,11 +236,18 @@ fn download(source_url: &str, target_file: &str) -> Result<()> {
 }
 
 fn main() {
-  let source_url = "http://jigsaw.w3.org/HTTP/ChunkedScript";
-  let target_file = "img.jpg";
+  let source_url = "http://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.010239055613055825";
 
-  match download(source_url, target_file) {
+  match download(source_url) {
     Ok(_) => println!("Download success!"),
     Err(e) => println!("{}", e),
   }
 }
+
+
+// TODO get link from command line
+// TODO allow file name as param
+// TODO show progress in %, kb of all, speed
+// TODO check https
+// TODO check status code to see if should look for eof or abort
+// TODO split into multiple files
