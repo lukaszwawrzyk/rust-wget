@@ -86,21 +86,43 @@ impl Response {
         self.download_fixed_bytes(content_length, destination),
       None =>
         if response_head.is_chunked() {
-          Self::download_chunked()
+          self.download_chunked(destination)
         } else {
           Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
         }
     }
   }
 
-  fn download_chunked() -> Result<()> {
-    Ok(())
+  fn download_chunked(&mut self, destination: &mut Write) -> Result<()> {
+    loop {
+      let chunk_size = try!(self.read_line_r_n()
+        .and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
+      println!("Chunk size: {:?}", chunk_size);
+
+      println!("Downloading {:?} bytes", chunk_size);
+      try!(self.download_fixed_bytes(chunk_size, destination));
+      println!("Eating rn");
+      try!(self.eat_r_n());
+
+      if chunk_size == 0 {
+        println!("CHUNK SIZE WAS 0");
+        return Ok(());
+      }
+    }
   }
+
+  // TODO ZROBIC B REF DO HEADERÓW
 
   fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write) -> Result<()> {
     let mut total_bytes_read: u64 = 0;
     loop {
-      let bytes_read: usize = try_str!(self.reader.read(&mut self.buffer[..]));
+      let bytes_left = expected_length - total_bytes_read;
+
+      let bytes_read: usize = if bytes_left < BUFFER_SIZE as u64 {
+        try_str!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]))
+      } else {
+        try_str!(self.reader.read(&mut self.buffer[..]))
+      };
 
       if bytes_read == 0 {
         if total_bytes_read != expected_length {
@@ -156,19 +178,34 @@ impl Response {
   fn read_raw_head(&mut self) -> Result<Vec<String>> {
     let mut headers: Vec<String> = Vec::new();
     loop {
-      let mut line = String::new();
-      try_str!(self.reader.read_line(&mut line));
-
-      if line.ends_with("\r\n") {
-        let len = line.len();
-        line.truncate(len - 2);
-      }
+      let line = try!(self.read_line_r_n());
 
       if line.is_empty() {
         return Ok(headers);
       } else {
         headers.push(line);
       }
+    }
+  }
+
+  fn read_line_r_n(&mut self) -> Result<String> {
+    let mut line = String::new();
+    try_str!(self.reader.read_line(&mut line));
+
+    if line.ends_with("\r\n") {
+      let len = line.len();
+      line.truncate(len - 2);
+    }
+
+    Ok(line)
+  }
+
+  fn eat_r_n(&mut self) -> Result<()> {
+    let line = try!(self.read_line_r_n());
+    if line.is_empty() {
+      Ok(())
+    } else {
+      Err(format!("Expected empty line, found {}", line).to_owned())
     }
   }
 }
@@ -202,8 +239,8 @@ fn download(source_url: &str, target_file: &str) -> Result<()> {
 }
 
 fn main() {
-  let source_url = "http://google.com/";
-  let target_file = "google.html";
+  let source_url = "http://jigsaw.w3.org/HTTP/ChunkedScript";
+  let target_file = "img.jpg";
 
   match download(source_url, target_file) {
     Ok(_) => println!("Download success!"),
