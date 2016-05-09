@@ -200,10 +200,10 @@ impl Response {
 
 const DEFAULT_FILE_NAME: &'static str = "out";
 
-fn download(source_url: &str) -> Result<()> {
+fn download(source_url: &str, file_name_opt: Option<String>) -> Result<()> {
   let url = try_str!(Url::parse(source_url));
   let mut socket = try!(connect(&url));
-  let file_name = get_file_name(&url);
+  let file_name = file_name_opt.unwrap_or(get_file_name(&url));
   let destination_path = Path::new(&file_name);
 
   let request = try!(Request::format(&url));
@@ -236,9 +236,10 @@ fn download(source_url: &str) -> Result<()> {
 }
 
 fn main() {
-  let source_url = "http://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.010239055613055825";
+  let source_url = "http://stackoverflow.com/questions/tagged/scala";
+  let destination_file = "asd";
 
-  match download(source_url) {
+  match download(source_url, None) {
     Ok(_) => println!("Download success!"),
     Err(e) => println!("{}", e),
   }
