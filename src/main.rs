@@ -2,6 +2,10 @@
 
 extern crate url;
 
+#[macro_use]
+mod common;
+
+use common::Result;
 use std::io;
 use std::io::{BufReader, Read, Write, BufRead};
 use std::fs::File;
@@ -11,19 +15,6 @@ use url::Url;
 use std::result;
 use std::collections::HashMap;
 
-pub type Result<T> = result::Result<T, String>;
-
-macro_rules! str_err {
-  ($e:expr) => {
-    $e.map_err(|err| err.to_string());
-  };
-}
-
-macro_rules! try_str {
-  ($e:expr) => {
-    try!($e.map_err(|err| err.to_string()));
-  };
-}
 
 struct Request {
   content: String,
