@@ -4,213 +4,38 @@ extern crate url;
 
 #[macro_use]
 mod common;
+mod request;
+mod response;
 
+use std::env;
+use response::Response;
+use request::Request;
 use common::Result;
-use std::io;
-use std::io::{BufReader, Read, Write, BufRead};
-use std::fs::File;
 use std::path::Path;
 use std::net::TcpStream;
 use url::Url;
 use std::result;
-use std::collections::HashMap;
 
 
-struct Request {
-  content: String,
-}
-
-impl Request {
-  fn format(url: &Url) -> Result<Request> {
-    url.host_str()
-      .map(|host| format!("GET {} HTTP/1.1\r\nHost: {}\r\nAccept: */*\r\n\r\n", url.path(), host))
-      .map(|request| Request { content: request })
-      .ok_or("No host found in url".to_owned())
-  }
-
-  fn send(&self, socket: &mut TcpStream) -> Result<()> {
-    let bytes = self.content.as_bytes();
-    str_err!(socket.write(bytes).map(|_| ()))
-  }
-}
-
-struct ResponseHead {
-  status_code: u16,
-  headers: HashMap<String, String>,
-}
-
-impl ResponseHead {
-  fn content_length(&self) -> Option<u64> {
-    self.headers.get("Content-Length").and_then(|num| num.parse::<u64>().ok())
-  }
-
-  fn is_chunked(&self) -> bool {
-    self.headers.get("Transfer-Encoding").map_or(false, |encoding| encoding == "chunked")
-  }
-}
-
-const BUFFER_SIZE: usize = 512;
-
-pub struct Response {
-  reader: BufReader<TcpStream>,
-  buffer: [u8; BUFFER_SIZE],
-}
-
-impl Response {
-  pub fn new(socket: TcpStream) -> Response {
-    Response {
-      reader: BufReader::new(socket),
-      buffer: [0; BUFFER_SIZE],
-    }
-  }
-
-  pub fn download(&mut self, destination_path: &Path) -> Result<()> {
-    let response_head = try!(self.get_head());
-    match response_head.content_length() {
-      Some(content_length) => {
-        let mut destination = try_str!(File::create(destination_path));
-        self.download_fixed_bytes(content_length, &mut destination)
-      },
-      None =>
-        if response_head.is_chunked() {
-          let mut destination = try_str!(File::create(destination_path));
-          self.download_chunked(&mut destination)
-        } else {
-          Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
-        }
-    }
-  }
-
-  fn download_chunked(&mut self, destination: &mut Write) -> Result<()> {
-    loop {
-      let chunk_size = try!(self.read_line_r_n()
-        .and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
-
-      try!(self.download_fixed_bytes(chunk_size, destination));
-      try!(self.eat_r_n());
-
-      if chunk_size == 0 {
-        return Ok(());
-      }
-    }
-  }
-
-  fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write) -> Result<()> {
-    let mut total_bytes_read: u64 = 0;
-    loop {
-      let bytes_left = expected_length - total_bytes_read;
-
-      let bytes_read: usize = if bytes_left < BUFFER_SIZE as u64 {
-        try_str!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]))
-      } else {
-        try_str!(self.reader.read(&mut self.buffer[..]))
-      };
-
-      if bytes_read == 0 {
-        if total_bytes_read != expected_length {
-          return Err(format!("Failed to read expected number of bytes. Read {} of {}", total_bytes_read, expected_length));
-        } else {
-          return Ok(());
-        }
-      }
-
-      try_str!(destination.write_all(&self.buffer[0..bytes_read]));
-
-      total_bytes_read += bytes_read as u64;
-
-      if total_bytes_read >= expected_length {
-        return Ok(());
-      }
-    }
-  }
-
-  fn get_head(&mut self) -> Result<ResponseHead> {
-    self.read_raw_head().and_then(|raw_head| {
-      match &raw_head[..] {
-        [ref status_line, raw_headers..] =>
-          Self::get_status_code(&status_line).map(|code| {
-            let headers = Self::get_header_map(raw_headers);
-            ResponseHead {
-              status_code: code,
-              headers: headers
-            }
-          }),
-        _ => Err("Invalid response format".to_owned()),
-      }
-    })
-  }
-
-  fn get_status_code(line: &String) -> Result<u16> {
-    line.split_whitespace().nth(1)
-      .ok_or("Bad response - no status code found".to_owned())
-      .and_then(|code| code.parse::<u16>()
-        .map_err(|_| "Bad response - invalid status code".to_owned()))
-  }
-
-  fn get_header_map(header_lines: &[String]) -> HashMap<String, String> {
-    header_lines.into_iter().flat_map(|line| {
-      let splitted: Vec<&str> = line.split(": ").collect();
-      match &splitted[..] {
-        [key, value] => Some((key.to_string(), value.to_string())),
-        _ => None
-      }
-    }).collect()
-  }
-
-  fn read_raw_head(&mut self) -> Result<Vec<String>> {
-    let headers: io::Result<Vec<String>> = self.reader.by_ref().lines()
-      .take_while(|res| match *res {
-        Ok(ref line) if !line.is_empty() => true,
-        _ => false
-      }).collect();
-
-    str_err!(headers)
-  }
-
-  fn read_line_r_n(&mut self) -> Result<String> {
-    let mut line = String::new();
-    try_str!(self.reader.read_line(&mut line));
-
-    if line.ends_with("\r\n") {
-      let len = line.len();
-      line.truncate(len - 2);
-    }
-
-    Ok(line)
-  }
-
-  fn eat_r_n(&mut self) -> Result<()> {
-    let line = try!(self.read_line_r_n());
-    if line.is_empty() {
-      Ok(())
-    } else {
-      Err(format!("Expected empty line, found {}", line).to_owned())
-    }
-  }
-}
 
 const DEFAULT_FILE_NAME: &'static str = "out";
 
-fn download(source_url: &str, file_name_opt: Option<String>) -> Result<()> {
+fn download(source_url: &str, file_name_opt: Option<String>) -> Result<String> {
   let url = try_str!(Url::parse(source_url));
+
   let mut socket = try!(connect(&url));
-  let file_name = file_name_opt.unwrap_or(get_file_name(&url));
+
+  let file_name = file_name_opt.unwrap_or(file_name_from_url(&url));
   let destination_path = Path::new(&file_name);
+
 
   let request = try!(Request::format(&url));
   try!(request.send(&mut socket));
 
   let mut response = Response::new(socket);
-  return response.download(&destination_path);
 
+  return response.download(&destination_path).map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string());
 
-
-  fn get_file_name(url: &Url) -> String {
-    url.path_segments()
-      .and_then(|segments| segments.last())
-      .map(|s| s.to_string())
-      .unwrap_or(DEFAULT_FILE_NAME.to_string())
-  }
 
   fn connect(url: &Url) -> Result<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
@@ -224,22 +49,37 @@ fn download(source_url: &str, file_name_opt: Option<String>) -> Result<()> {
 
     str_err!(socket)
   }
+
+  fn file_name_from_url(url: &Url) -> String {
+    url.path_segments()
+      .and_then(|segments| segments.last())
+      .map(|s| s.to_string())
+      .and_then(|s| if s.is_empty() { None } else { Some(s) })
+      .unwrap_or(DEFAULT_FILE_NAME.to_string())
+  }
 }
 
 fn main() {
-  let source_url = "http://stackoverflow.com/questions/tagged/scala";
-  let destination_file = "asd";
+  let args: Vec<String> = env::args().collect();
 
-  match download(source_url, None) {
-    Ok(_) => println!("Download success!"),
+  let result = match &args[..] {
+    [_, ref source_url] =>
+      download(source_url, None),
+    [_, ref source_url, ref destination_file] =>
+      download(source_url, Some(destination_file.to_string())),
+    [ref name, ..] =>
+      Err(format!("Usage: {} <url> [dest_file]", name).to_owned()),
+    _ =>
+      Err("Invalid argments".to_owned()),
+  };
+
+  match result {
+    Ok(msg) => println!("{}", msg),
     Err(e) => println!("{}", e),
   }
 }
 
 
-// TODO get link from command line
-// TODO allow file name as param
 // TODO show progress in %, kb of all, speed
 // TODO check https
 // TODO check status code to see if should look for eof or abort
-// TODO split into multiple files

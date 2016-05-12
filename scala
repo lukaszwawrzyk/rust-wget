@@ -24,7 +24,7 @@
 
 
     <script>
-        StackExchange.init({"locale":"en","stackAuthUrl":"https://stackauth.com","networkMetaHostname":"meta.stackexchange.com","serverTime":1463047625,"routeName":"Questions/ListByTag","styleCode":true,"enableUserHovercards":true,"snippets":{"enabled":true,"domain":"stacksnippets.net"},"site":{"name":"Stack Overflow","description":"Q&A for professional and enthusiast programmers","isNoticesTabEnabled":true,"recaptchaPublicKey":"6LdchgIAAAAAAJwGpIzRQSOFaO0pU6s44Xt8aTwc","recaptchaAudioLang":"en","enableNewTagCreationWarning":true,"insertSpaceAfterNameTabCompletion":false,"id":1,"enableSocialMediaInSharePopup":true},"user":{"fkey":"9daf255322405de7dd410db9b65d0744","rep":0,"isAnonymous":true,"isAnonymousNetworkWide":true}});
+        StackExchange.init({"locale":"en","stackAuthUrl":"https://stackauth.com","networkMetaHostname":"meta.stackexchange.com","serverTime":1463050117,"routeName":"Questions/ListByTag","styleCode":true,"enableUserHovercards":true,"snippets":{"enabled":true,"domain":"stacksnippets.net"},"site":{"name":"Stack Overflow","description":"Q&A for professional and enthusiast programmers","isNoticesTabEnabled":true,"recaptchaPublicKey":"6LdchgIAAAAAAJwGpIzRQSOFaO0pU6s44Xt8aTwc","recaptchaAudioLang":"en","enableNewTagCreationWarning":true,"insertSpaceAfterNameTabCompletion":false,"id":1,"enableSocialMediaInSharePopup":true},"user":{"fkey":"9daf255322405de7dd410db9b65d0744","rep":0,"isAnonymous":true,"isAnonymousNetworkWide":true}});
         StackExchange.using.setCacheBreakers({"js/prettify-full.en.js":"f578e90a3275","js/moderator.en.js":"93d72db84db2","js/full-anon.en.js":"1bbfb2f8ee90","js/full.en.js":"0dc04e04c707","js/wmd.en.js":"f85d226fcebb","js/third-party/jquery.autocomplete.min.js":"e5f01e97f7c3","js/third-party/jquery.autocomplete.min.en.js":"","js/mobile.en.js":"2c293de7dc9e","js/help.en.js":"f9152eb55343","js/tageditor.en.js":"da67ed238e28","js/tageditornew.en.js":"541c325067e4","js/inline-tag-editing.en.js":"943c7090ea55","js/revisions.en.js":"47de10a8358f","js/review.en.js":"62df4de6e56a","js/tagsuggestions.en.js":"78eee7c19ab2","js/post-validation.en.js":"e769918cdd0b","js/explore-qlist.en.js":"e71f14781288","js/events.en.js":"4ce11cadc3be","js/keyboard-shortcuts.en.js":"5083faa73fc7","js/external-editor.en.js":"4c9146d423ad","js/external-editor.en.js":"4c9146d423ad","js/snippet-javascript.en.js":"a98ed5ff77f7","js/snippet-javascript-codemirror.en.js":"ac4095f27e9d"});
         StackExchange.using("gps", function() {
              StackExchange.gps.init(true);
@@ -308,9 +308,9 @@ your communities        </h3>
         <div class="question">
 <script>
                 var ados = ados || {}; ados.run = ados.run || [];
-                ados.run.push(function () { ados_add_placement(22,8277,"adzerk520462295",56).setZone(739); });
+                ados.run.push(function () { ados_add_placement(22,8277,"adzerk1704140280",56).setZone(739); });
             </script>
-            <div class="everyonelovesstackoverflow" id="adzerk520462295">
+            <div class="everyonelovesstackoverflow" id="adzerk1704140280">
             </div>
 
             <div class="welovestackoverflow" style="margin-top: 10px;">
@@ -331,7 +331,7 @@ advanced static type system ...                         </p>
 
         </div>
         <div id="questions" class="content-padding">
-<div class="question-summary" id="question-summary-37183450">
+<div class="question-summary" id="question-summary-37184528">
     <div class="statscontainer">
         <div class="statsarrow"></div>
         <div class="stats">
@@ -341,12 +341,101 @@ advanced static type system ...                         </p>
                     <div class="viewcount">votes</div>
                 </div>
             </div>
-            <div class="status answered">
-                <strong>1</strong>answer
+            <div class="status unanswered">
+                <strong>0</strong>answers
             </div>
         </div>
-        <div class="views " title="8 views">
-    8 views
+        <div class="views " title="4 views">
+    4 views
+</div>
+    </div>
+    <div class="summary">
+        <h3><a href="/questions/37184528/mock-case-class-in-scala-mockito" class="question-hyperlink">mock case class in scala : Mockito</a></h3>
+        <div class="excerpt">
+            In my play application i intend to mock a case class. I am able to do so but it creates an object with all member variables null. 
+Is there a way to create mock objects of a case classes such that the ...
+        </div>          
+        <div class="tags t-scala t-testing t-mockito">
+            <a href="/questions/tagged/scala" class="post-tag" title="show questions tagged &#39;scala&#39;" rel="tag">scala</a> <a href="/questions/tagged/testing" class="post-tag" title="show questions tagged &#39;testing&#39;" rel="tag">testing</a> <a href="/questions/tagged/mockito" class="post-tag" title="show questions tagged &#39;mockito&#39;" rel="tag">mockito</a> 
+        </div>
+        <div class="started fr">
+            <div class="user-info ">
+    <div class="user-action-time">
+        asked <span title="2016-05-12 10:40:50Z" class="relativetime">7 mins ago</span>
+    </div>
+    <div class="user-gravatar32">
+        <a href="/users/2089768/konquestor"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/d308c502ac35bdf3c872a79d12ef1c49?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
+    </div>
+    <div class="user-details">
+        <a href="/users/2089768/konquestor">konquestor</a>
+        <div class="-flair">
+            <span class="reputation-score" title="reputation score " dir="ltr">161</span><span title="1 silver badge"><span class="badge2"></span><span class="badgecount">1</span></span><span title="9 bronze badges"><span class="badge3"></span><span class="badgecount">9</span></span>
+        </div>
+    </div>
+</div>
+        </div>  
+    </div>
+</div><div class="question-summary" id="question-summary-37183774">
+    <div class="statscontainer">
+        <div class="statsarrow"></div>
+        <div class="stats">
+            <div class="vote">
+                <div class="votes">
+                    <span class="vote-count-post "><strong>1</strong></span>
+                    <div class="viewcount">vote</div>
+                </div>
+            </div>
+            <div class="status unanswered">
+                <strong>0</strong>answers
+            </div>
+        </div>
+        <div class="views " title="6 views">
+    6 views
+</div>
+    </div>
+    <div class="summary">
+        <h3><a href="/questions/37183774/while-reading-a-specific-parquet-column-all-column-are-read-instead-of-single" class="question-hyperlink">While Reading a specific Parquet Column , All column are read instead of single column which is given in Parquet-Sql</a></h3>
+        <div class="excerpt">
+            I have read in Parquet Documentation that Only the column I query, the data of that column is read and processed. But When I see the Spark-UI I am finding that complete file is read. 
+
+Following is ...
+        </div>          
+        <div class="tags t-scala t-apache-spark t-apache-spark-sql t-parquet">
+            <a href="/questions/tagged/scala" class="post-tag" title="show questions tagged &#39;scala&#39;" rel="tag">scala</a> <a href="/questions/tagged/apache-spark" class="post-tag" title="show questions tagged &#39;apache-spark&#39;" rel="tag">apache-spark</a> <a href="/questions/tagged/apache-spark-sql" class="post-tag" title="show questions tagged &#39;apache-spark-sql&#39;" rel="tag">apache-spark-sql</a> <a href="/questions/tagged/parquet" class="post-tag" title="show questions tagged &#39;parquet&#39;" rel="tag">parquet</a> 
+        </div>
+        <div class="started fr">
+            <div class="user-info ">
+    <div class="user-action-time">
+        asked <span title="2016-05-12 10:10:20Z" class="relativetime">38 mins ago</span>
+    </div>
+    <div class="user-gravatar32">
+        <a href="/users/4301241/pg20"><div class="gravatar-wrapper-32"><img src="https://lh4.googleusercontent.com/-U4P8J0ZpLYU/AAAAAAAAAAI/AAAAAAAAAoQ/NqbKzC3GXLI/photo.jpg?sz=32" alt="" width="32" height="32"></div></a>
+    </div>
+    <div class="user-details">
+        <a href="/users/4301241/pg20">pg20</a>
+        <div class="-flair">
+            <span class="reputation-score" title="reputation score " dir="ltr">21</span><span title="4 bronze badges"><span class="badge3"></span><span class="badgecount">4</span></span>
+        </div>
+    </div>
+</div>
+        </div>  
+    </div>
+</div><div class="question-summary" id="question-summary-37183450">
+    <div class="statscontainer">
+        <div class="statsarrow"></div>
+        <div class="stats">
+            <div class="vote">
+                <div class="votes">
+                    <span class="vote-count-post "><strong>0</strong></span>
+                    <div class="viewcount">votes</div>
+                </div>
+            </div>
+            <div class="status answered-accepted">
+                <strong>2</strong>answers
+            </div>
+        </div>
+        <div class="views " title="21 views">
+    21 views
 </div>
     </div>
     <div class="summary">
@@ -371,7 +460,7 @@ casting it as pattern ...
         <div class="started fr">
             <div class="user-info user-hover">
     <div class="user-action-time">
-        asked <span title="2016-05-12 09:55:57Z" class="relativetime">11 mins ago</span>
+        asked <span title="2016-05-12 09:55:57Z" class="relativetime">52 mins ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/1142881/giovanni-azua"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/11cb28c8ae0645baf024b6a3d87b019a?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
@@ -379,7 +468,7 @@ casting it as pattern ...
     <div class="user-details">
         <a href="/users/1142881/giovanni-azua">Giovanni Azua</a>
         <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">3,193</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="27 silver badges"><span class="badge2"></span><span class="badgecount">27</span></span><span title="53 bronze badges"><span class="badge3"></span><span class="badgecount">53</span></span>
+            <span class="reputation-score" title="reputation score " dir="ltr">3,195</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="27 silver badges"><span class="badge2"></span><span class="badgecount">27</span></span><span title="53 bronze badges"><span class="badge3"></span><span class="badgecount">53</span></span>
         </div>
     </div>
 </div>
@@ -417,7 +506,7 @@ For the oauth2 implementation in the server side, I have used "https://github.co
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 09:44:39Z" class="relativetime">22 mins ago</span>
+        asked <span title="2016-05-12 09:44:39Z" class="relativetime">1 hour ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/1584121/karthi"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/f50be837d7e1c236082e345d9724748d?s=32&amp;d=identicon&amp;r=PG&amp;f=1" alt="" width="32" height="32"></div></a>
@@ -445,12 +534,12 @@ For the oauth2 implementation in the server side, I have used "https://github.co
                 <strong>1</strong>answer
             </div>
         </div>
-        <div class="views " title="6 views">
-    6 views
+        <div class="views " title="7 views">
+    7 views
 </div>
     </div>
     <div class="summary">
-        <h3><a href="/questions/37182700/reactivemongo-bsonhandler-not-work-for-map" class="question-hyperlink">ReactiveMongo BSONHandler not work for Map</a></h3>
+        <h3><a href="/questions/37182700/reactivemongo-bsonhandler-for-map" class="question-hyperlink">ReactiveMongo BSONHandler for Map</a></h3>
         <div class="excerpt">
             I have following class, and want to use reactivemongo.bson.Macros.handler to get the reader and writer automatically.
 
@@ -464,7 +553,7 @@ object Data {
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 09:26:08Z" class="relativetime">40 mins ago</span>
+        asked <span title="2016-05-12 09:26:08Z" class="relativetime">1 hour ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/2977588/%e5%ae%87%e5%ae%99%e4%ba%ba"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/57655e7e1b12c3e273696d62b68c981f?s=32&amp;d=identicon&amp;r=PG&amp;f=1" alt="" width="32" height="32"></div></a>
@@ -513,7 +602,7 @@ testALL := {
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 09:25:13Z" class="relativetime">41 mins ago</span>
+        asked <span title="2016-05-12 09:25:13Z" class="relativetime">1 hour ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/915710/bharadwaj"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/ad371ce4e9a71dd48d916a5355b8b0d7?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
@@ -541,14 +630,15 @@ testALL := {
                 <strong>0</strong>answers
             </div>
         </div>
-        <div class="views " title="10 views">
-    10 views
+        <div class="views " title="13 views">
+    13 views
 </div>
     </div>
     <div class="summary">
         <h3><a href="/questions/37182158/dataframe-creation-in-scala" class="question-hyperlink">Dataframe creation in Scala</a></h3>
         <div class="excerpt">
             wordsDF = sqlContext.createDataFrame([('cat',), ('elephant',), ('rat',), ('rat',), ('cat', )], ['word'])
+
 
 This is a way of creating dataframe from a list of tuples in python. How can I do this in ...
         </div>          
@@ -566,7 +656,7 @@ This is a way of creating dataframe from a list of tuples in python. How can I d
     <div class="user-details">
         <a href="/users/6175486/shivam-saxena">Shivam Saxena</a>
         <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">6</span><span title="2 bronze badges"><span class="badge3"></span><span class="badgecount">2</span></span>
+            <span class="reputation-score" title="reputation score " dir="ltr">6</span><span title="3 bronze badges"><span class="badge3"></span><span class="badgecount">3</span></span>
         </div>
     </div>
 </div>
@@ -578,16 +668,16 @@ This is a way of creating dataframe from a list of tuples in python. How can I d
         <div class="stats">
             <div class="vote">
                 <div class="votes">
-                    <span class="vote-count-post "><strong>0</strong></span>
-                    <div class="viewcount">votes</div>
+                    <span class="vote-count-post "><strong>1</strong></span>
+                    <div class="viewcount">vote</div>
                 </div>
             </div>
             <div class="status answered">
-                <strong>1</strong>answer
+                <strong>2</strong>answers
             </div>
         </div>
-        <div class="views " title="10 views">
-    10 views
+        <div class="views " title="11 views">
+    11 views
 </div>
     </div>
     <div class="summary">
@@ -613,7 +703,7 @@ val ...
     <div class="user-details">
         <a href="/users/6324518/anna-grebenyuk">Anna Grebenyuk</a>
         <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">1</span>
+            <span class="reputation-score" title="reputation score " dir="ltr">6</span><span title="1 bronze badge"><span class="badge3"></span><span class="badgecount">1</span></span>
         </div>
     </div>
 </div>
@@ -633,8 +723,8 @@ val ...
                 <strong>3</strong>answers
             </div>
         </div>
-        <div class="views " title="24 views">
-    24 views
+        <div class="views " title="26 views">
+    26 views
 </div>
     </div>
     <div class="summary">
@@ -659,7 +749,7 @@ Multiple markers at ...
         <div class="started fr">
             <div class="user-info user-hover">
     <div class="user-action-time">
-        asked <span title="2016-05-12 08:47:32Z" class="relativetime">1 hour ago</span>
+        asked <span title="2016-05-12 08:47:32Z" class="relativetime">2 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/1142881/giovanni-azua"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/11cb28c8ae0645baf024b6a3d87b019a?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
@@ -667,7 +757,7 @@ Multiple markers at ...
     <div class="user-details">
         <a href="/users/1142881/giovanni-azua">Giovanni Azua</a>
         <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">3,193</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="27 silver badges"><span class="badge2"></span><span class="badgecount">27</span></span><span title="53 bronze badges"><span class="badge3"></span><span class="badgecount">53</span></span>
+            <span class="reputation-score" title="reputation score " dir="ltr">3,195</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="27 silver badges"><span class="badge2"></span><span class="badgecount">27</span></span><span title="53 bronze badges"><span class="badge3"></span><span class="badgecount">53</span></span>
         </div>
     </div>
 </div>
@@ -702,7 +792,7 @@ Multiple markers at ...
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 08:32:05Z" class="relativetime">1 hour ago</span>
+        asked <span title="2016-05-12 08:32:05Z" class="relativetime">2 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/843477/tacos-tacos-tacos"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/2822ab8354d7f738ff44a4fd54180090?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
@@ -722,16 +812,16 @@ Multiple markers at ...
         <div class="stats">
             <div class="vote">
                 <div class="votes">
-                    <span class="vote-count-post "><strong>0</strong></span>
-                    <div class="viewcount">votes</div>
+                    <span class="vote-count-post "><strong>1</strong></span>
+                    <div class="viewcount">vote</div>
                 </div>
             </div>
             <div class="status unanswered">
                 <strong>0</strong>answers
             </div>
         </div>
-        <div class="views " title="6 views">
-    6 views
+        <div class="views " title="7 views">
+    7 views
 </div>
     </div>
     <div class="summary">
@@ -753,7 +843,7 @@ Multiple markers at ...
     <div class="user-details">
         <a href="/users/2737481/vignesh-i">Vignesh I</a>
         <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">1,222</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="5 silver badges"><span class="badge2"></span><span class="badgecount">5</span></span><span title="17 bronze badges"><span class="badge3"></span><span class="badgecount">17</span></span>
+            <span class="reputation-score" title="reputation score " dir="ltr">1,227</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="5 silver badges"><span class="badge2"></span><span class="badgecount">5</span></span><span title="17 bronze badges"><span class="badge3"></span><span class="badgecount">17</span></span>
         </div>
     </div>
 </div>
@@ -773,8 +863,8 @@ Multiple markers at ...
                 <strong>1</strong>answer
             </div>
         </div>
-        <div class="views " title="19 views">
-    19 views
+        <div class="views " title="20 views">
+    20 views
 </div>
     </div>
     <div class="summary">
@@ -790,7 +880,7 @@ public interface ...
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 07:35:31Z" class="relativetime">2 hours ago</span>
+        asked <span title="2016-05-12 07:35:31Z" class="relativetime">3 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/1490386/muneeb-nasir"><div class="gravatar-wrapper-32"><img src="https://i.stack.imgur.com/akavc.jpg?s=32&amp;g=1" alt="" width="32" height="32"></div></a>
@@ -818,8 +908,8 @@ public interface ...
                 <strong>2</strong>answers
             </div>
         </div>
-        <div class="views " title="32 views">
-    32 views
+        <div class="views " title="33 views">
+    33 views
 </div>
     </div>
     <div class="summary">
@@ -841,7 +931,7 @@ Instead funB(arg1, arg2, ...
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 07:34:20Z" class="relativetime">2 hours ago</span>
+        asked <span title="2016-05-12 07:34:20Z" class="relativetime">3 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/4745627/micha%c5%82-pawlak"><div class="gravatar-wrapper-32"><img src="https://lh4.googleusercontent.com/-qbE-XYi3dI4/AAAAAAAAAAI/AAAAAAAAAAA/3xpHwmx-0FQ/photo.jpg?sz=32" alt="" width="32" height="32"></div></a>
@@ -869,8 +959,8 @@ Instead funB(arg1, arg2, ...
                 <strong>2</strong>answers
             </div>
         </div>
-        <div class="views " title="27 views">
-    27 views
+        <div class="views " title="29 views">
+    29 views
 </div>
     </div>
     <div class="summary">
@@ -886,7 +976,7 @@ Instead funB(arg1, arg2, ...
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 07:28:49Z" class="relativetime">2 hours ago</span>
+        asked <span title="2016-05-12 07:28:49Z" class="relativetime">3 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/3106360/helios"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/46e140ecce5a1701342a1472d9cf9520?s=32&amp;d=identicon&amp;r=PG&amp;f=1" alt="" width="32" height="32"></div></a>
@@ -930,7 +1020,7 @@ There are some categorical variables that I deal with them by using oneHotEncode
         <div class="started fr">
             <div class="user-info ">
     <div class="user-action-time">
-        asked <span title="2016-05-12 07:13:03Z" class="relativetime">2 hours ago</span>
+        asked <span title="2016-05-12 07:13:03Z" class="relativetime">3 hours ago</span>
     </div>
     <div class="user-gravatar32">
         <a href="/users/3825054/cacheme"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/b6f45b65a0e8edc7daf836489a8ca2ca?s=32&amp;d=identicon&amp;r=PG&amp;f=1" alt="" width="32" height="32"></div></a>
@@ -939,97 +1029,6 @@ There are some categorical variables that I deal with them by using oneHotEncode
         <a href="/users/3825054/cacheme">CacheMe</a>
         <div class="-flair">
             <span class="reputation-score" title="reputation score " dir="ltr">1</span><span title="3 bronze badges"><span class="badge3"></span><span class="badgecount">3</span></span>
-        </div>
-    </div>
-</div>
-        </div>  
-    </div>
-</div><div class="question-summary" id="question-summary-37178675">
-    <div class="statscontainer">
-        <div class="statsarrow"></div>
-        <div class="stats">
-            <div class="vote">
-                <div class="votes">
-                    <span class="vote-count-post "><strong>1</strong></span>
-                    <div class="viewcount">vote</div>
-                </div>
-            </div>
-            <div class="status unanswered">
-                <strong>0</strong>answers
-            </div>
-        </div>
-        <div class="views " title="13 views">
-    13 views
-</div>
-    </div>
-    <div class="summary">
-        <h3><a href="/questions/37178675/failed-on-injecting-akka-actor-to-play-framework-2-5-with-guice" class="question-hyperlink">Failed on Injecting Akka Actor to Play Framework 2.5 with Guice</a></h3>
-        <div class="excerpt">
-            I am trying to use an Akka actor in my Play 2.5 application with dependency injection. I basically followed the documentation on that, and here's a glimpse of my code:
-
-The Actor
-
-Basically, I have a ...
-        </div>          
-        <div class="tags t-scala t-dependency-injection t-akka t-playframework-2û5">
-            <a href="/questions/tagged/scala" class="post-tag" title="show questions tagged &#39;scala&#39;" rel="tag">scala</a> <a href="/questions/tagged/dependency-injection" class="post-tag" title="show questions tagged &#39;dependency-injection&#39;" rel="tag">dependency-injection</a> <a href="/questions/tagged/akka" class="post-tag" title="show questions tagged &#39;akka&#39;" rel="tag">akka</a> <a href="/questions/tagged/playframework-2.5" class="post-tag" title="show questions tagged &#39;playframework-2.5&#39;" rel="tag">playframework-2.5</a> 
-        </div>
-        <div class="started fr">
-            <div class="user-info ">
-    <div class="user-action-time">
-        asked <span title="2016-05-12 06:16:29Z" class="relativetime">3 hours ago</span>
-    </div>
-    <div class="user-gravatar32">
-        <a href="/users/274058/bertzzie"><div class="gravatar-wrapper-32"><img src="https://www.gravatar.com/avatar/0e6be601920301c6c1070fa29304452a?s=32&amp;d=identicon&amp;r=PG" alt="" width="32" height="32"></div></a>
-    </div>
-    <div class="user-details">
-        <a href="/users/274058/bertzzie">bertzzie</a>
-        <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">1,458</span><span title="1 gold badge"><span class="badge1"></span><span class="badgecount">1</span></span><span title="17 silver badges"><span class="badge2"></span><span class="badgecount">17</span></span><span title="34 bronze badges"><span class="badge3"></span><span class="badgecount">34</span></span>
-        </div>
-    </div>
-</div>
-        </div>  
-    </div>
-</div><div class="question-summary" id="question-summary-37177733">
-    <div class="statscontainer">
-        <div class="statsarrow"></div>
-        <div class="stats">
-            <div class="vote">
-                <div class="votes">
-                    <span class="vote-count-post "><strong>1</strong></span>
-                    <div class="viewcount">vote</div>
-                </div>
-            </div>
-            <div class="status answered">
-                <strong>4</strong>answers
-            </div>
-        </div>
-        <div class="views " title="51 views">
-    51 views
-</div>
-    </div>
-    <div class="summary">
-        <h3><a href="/questions/37177733/which-happens-first-in-flatmap-flatten-or-map" class="question-hyperlink">Which happens first in flatMap, flatten or map?</a></h3>
-        <div class="excerpt">
-            If I use xxx.flatMap(_.split(" ")), will it split the array an then flatten or will it flatten and then split?
-
-        </div>          
-        <div class="tags t-arrays t-scala t-flatmap">
-            <a href="/questions/tagged/arrays" class="post-tag" title="show questions tagged &#39;arrays&#39;" rel="tag">arrays</a> <a href="/questions/tagged/scala" class="post-tag" title="show questions tagged &#39;scala&#39;" rel="tag">scala</a> <a href="/questions/tagged/flatmap" class="post-tag" title="show questions tagged &#39;flatmap&#39;" rel="tag">flatmap</a> 
-        </div>
-        <div class="started fr">
-            <div class="user-info ">
-    <div class="user-action-time">
-        asked <span title="2016-05-12 05:08:34Z" class="relativetime">4 hours ago</span>
-    </div>
-    <div class="user-gravatar32">
-        <a href="/users/6291713/%e9%a9%ac%e6%85%a7%e8%b6%85"><div class="gravatar-wrapper-32"><img src="https://graph.facebook.com/237166303310106/picture?type=large" alt="" width="32" height="32"></div></a>
-    </div>
-    <div class="user-details">
-        <a href="/users/6291713/%e9%a9%ac%e6%85%a7%e8%b6%85">马慧超</a>
-        <div class="-flair">
-            <span class="reputation-score" title="reputation score " dir="ltr">6</span><span title="1 bronze badge"><span class="badge3"></span><span class="badgecount">1</span></span>
         </div>
     </div>
 </div>
@@ -1049,7 +1048,7 @@ Basically, I have a ...
         <a href="/questions/tagged/scala?page=3&amp;sort=newest&amp;pagesize=15" title="go to page 3"> <span class="page-numbers">3</span> </a> 
         <a href="/questions/tagged/scala?page=4&amp;sort=newest&amp;pagesize=15" title="go to page 4"> <span class="page-numbers">4</span> </a> 
         <a href="/questions/tagged/scala?page=5&amp;sort=newest&amp;pagesize=15" title="go to page 5"> <span class="page-numbers">5</span> </a> 
- <span class="page-numbers dots">…</span>         <a href="/questions/tagged/scala?page=3384&amp;sort=newest&amp;pagesize=15" title="go to page 3384"> <span class="page-numbers">3384</span> </a> 
+ <span class="page-numbers dots">…</span>         <a href="/questions/tagged/scala?page=3385&amp;sort=newest&amp;pagesize=15" title="go to page 3385"> <span class="page-numbers">3385</span> </a> 
         <a href="/questions/tagged/scala?page=2&amp;sort=newest&amp;pagesize=15" rel="next" title="go to page 2"> <span class="page-numbers next"> next</span> </a> 
 
     </div>
@@ -1070,7 +1069,7 @@ Basically, I have a ...
     </div>
     <div id="sidebar">
         <div class="module">
-            <div class="summarycount al">50,760</div>
+            <div class="summarycount al">50,762</div>
             <p>questions tagged</p>
             <div class="tagged">
                 <a href="/questions/tagged/scala" class="post-tag" title="show questions tagged &#39;scala&#39;" rel="tag">scala</a> 
@@ -1082,8 +1081,12 @@ Basically, I have a ...
 
         
         
-        <div class="everyonelovesstackoverflow" id="careers2">
-        </div>
+        <script>
+                var ados = ados || {}; ados.run = ados.run || [];
+                ados.run.push(function () { ados_add_placement(22,8277,"adzerk1913489382",[5,17,2221]).setZone(45); });
+            </script>
+            <div class="everyonelovesstackoverflow" id="adzerk1913489382">
+            </div>
         <div id="hireme">
             <script>
 ;"use strict";(function(n){function it(n,i,r){var u=t.createElement("script"),e="onreadystatechange",o="onload",f="readyState",s=!1;u.async=!0;u.src=n;typeof i=="function"&&(u[o]=u[e]=function(){s||u[f]&&u[f]!=="loaded"&&u[f]!=="complete"||(s=!0,typeof i=="function"&&i(u),u[o]=u[e]=null,r&&u.parentNode.removeChild(u))});ft.appendChild(u)}function rt(n){var i=t.createElement("link");i.type="text/css";i.rel="stylesheet";i.href=n;et.appendChild(i)}function ct(){var n=i.StackExchange,t="options",r="user";return n&&n[t]&&n[t][r]&&n[t][r].accountId}function lt(n){var t,i;return n=ot(f.hash?f.hash.substr(1):"",n||{}),t=n.ac||n.accountId||ct(),t&&(n.ac=t),n.tags||(i=tt(),i.length>0&&(n.tags=i.join(";"))),n.host=f.host.replace(/\.internal$/,""),n}function at(n,t,i,u){var c=h(n);if(c===null)return function(){};var e=null,f=null,l=r(),a=function a(){g(c)?(s(e),u(!1,r()-l)):f=o(a,t)};return f=o(a,t),i!==undefined&&(e=o(function(){s(f);u(!0,r()-l)},i)),function(){s(f);s(e)}}function vt(n){var u=f.hash.indexOf("large=1")!==-1,e=y(),o=u||!e||n,s=o?1:2,h=a(["hireme","clc-sb"],v),t=[s+"="+h],r=a(["careers1","clc-tlb"],v),i;return r&&t.push("5="+r),i=a(["careers3","clc-mlb"],v),i&&t.push("6="+i),t.join("&")}function ut(n,t){var e=!!h("#careersadsdoublehigh"),s=k({},u,{zones:u.zones||vt(e)}),f=lt(s),o;n&&(f.azt=1);t&&(f.lw=t);typeof i.innerWidth=="number"&&(f.bw=i.innerWidth);b&&(f.ver=b);o=p()-(e+0);o>0&&(f.az="1");var c=st(f,["zones","ip","ac","eng","prov","tags","theme","at","remote","seed","lw","azt","sysadmin","bw","nocpm","jobview","cpview","ver","host","cp","az"]),a=w+"?"+c;l=r();it(a)}function yt(n){function h(){f.forEach(rt);e.forEach(function(n){return pt(n,t[n],s,o)});typeof i.clc_after_load=="function"&&i.clc_after_load()}var t=n.cr,u=n.h,f=n.st,e=Object.keys(t),o=l?r()-l:0,s="//"+u+"/ct";h()}function pt(n,t,i,r){var s=t.cl,c=t.cn,f=t.an,l=t.tr,o=(s||[]).join(" "),u=h("#"+n);u&&(o&&(u.className+=" "+o),u.innerHTML=c.replace("&pt=0","&pt="+(r||0)),u.onmousedown=function(n){for(var t=n.target,r,o,s;t.tagName!=="A"&&t!==u;)t=t.parentNode;t!==u&&(r=[],f&&r.push("an="+f),o=[].filter.call(t.attributes,function(n){return/^data-/.test(n.name)}),o.length>0&&o.forEach(function(n){var t=n.name.replace(/^data-/,"");r.push(e(t)+"="+e(n.value))}),r.push("tr="+l),s="",r.length>0&&(s="?"+r.join("&")),t.href=i+s)})}function wt(n){var i=t.createElement("a");return i.href=n,i.host}function bt(){var i,n;y()?(n=at("#sidebar "+c,20,i,ut),o(function(){var r=h(c),i;g(r)||(r.parentNode.removeChild(r),typeof n=="function"&&n(),i=t.createElement("img"),i.src="//"+wt(w)+"/to.gif",i.style.display="none",t.body.appendChild(i))},2e3)):ut()}var w=n.u,u=n.o,b=n.c,y,p;u=u||{};var k=Object.assign||function(n){for(var i,r,t=1;t<arguments.length;t++){i=arguments[t];for(r in i)Object.prototype.hasOwnProperty.call(i,r)&&(n[r]=i[r])}return n},i=window,f=i.location,e=i.encodeURIComponent,d=i.decodeURIComponent,t=i.document,ft=t.body,et=t.getElementsByTagName("head")[0],o=i.setTimeout,s=i.clearTimeout,c="[id^=adzerk].everyonelovesstackoverflow",l=0,r=function(){return(new Date).getTime()},ot=function(n,t){return n.split(/\&/g).reduce(function(n,t){var i=t.split("=");return n[d(i[0])]=d(i[1]),n},t||{})},st=function(n,t){return Object.keys(n).filter(function(n){return t.indexOf(n)!==-1}).map(function(t){return e(t)+"="+e(n[t])}).join("&")},g=function(n){return n.innerHTML.replace(/\s+$/g,"")},nt=t.querySelectorAll.bind(t),h=t.querySelector.bind(t),ht=t.getElementById.bind(t),a=function(n,t){return n.filter(t)[0]},tt=function(){return[].map.call(nt(".post-taglist .post-tag"),function(n){return n.textContent})},v=function(n){return!!ht(n)};y=function(){return p()>0};p=function(){return nt(c).length};i.clc=k(window.clc||{},{init:yt,load:bt,ls:it,as:rt,tags:tt})}).call(null, {"c":"dc0b27e","u":"//clc.stackoverflow.com/p.js"});"use strict";var allowedHosts=["stackoverflow.com","serverfault.com"];(allowedHosts[0]==="*"||allowedHosts.indexOf(location.hostname)!==-1)&&window.clc.load();            </script>
@@ -1100,7 +1103,7 @@ Basically, I have a ...
             <a href="/questions/tagged/playframework" class="post-tag no-tag-menu" title="show questions tagged &#39;playframework&#39;" rel="tag">playframework</a>&nbsp;<span class="item-multiplier"><span class="item-multiplier-x">&times;</span>&nbsp;<span class="item-multiplier-count">4330</span></span>
         </div>
         <div>
-            <a href="/questions/tagged/apache-spark" class="post-tag no-tag-menu" title="show questions tagged &#39;apache-spark&#39;" rel="tag">apache-spark</a>&nbsp;<span class="item-multiplier"><span class="item-multiplier-x">&times;</span>&nbsp;<span class="item-multiplier-count">3932</span></span>
+            <a href="/questions/tagged/apache-spark" class="post-tag no-tag-menu" title="show questions tagged &#39;apache-spark&#39;" rel="tag">apache-spark</a>&nbsp;<span class="item-multiplier"><span class="item-multiplier-x">&times;</span>&nbsp;<span class="item-multiplier-count">3933</span></span>
         </div>
         <div>
             <a href="/questions/tagged/sbt" class="post-tag no-tag-menu" title="show questions tagged &#39;sbt&#39;" rel="tag">sbt</a>&nbsp;<span class="item-multiplier"><span class="item-multiplier-x">&times;</span>&nbsp;<span class="item-multiplier-count">3487</span></span>
@@ -1196,50 +1199,50 @@ Basically, I have a ...
     </h4>
     <ul>
             <li >
-                <div class="favicon favicon-judaism" title="Mi Yodeya"></div><a href="http://judaism.stackexchange.com/questions/71198/is-there-a-correct-place-for-the-bima" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:248 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Is there a correct place for the bima
+                <div class="favicon favicon-academia" title="Academia Stack Exchange"></div><a href="http://academia.stackexchange.com/questions/68497/how-to-emphasize-the-main-contributor-to-a-paper-when-the-field-typically-orders" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:415 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    How to emphasize the main contributor to a paper when the field typically orders authors alphabetically?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-stackoverflow" title="Stack Overflow"></div><a href="http://stackoverflow.com/questions/37178921/set-size-of-array-within-structure" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:1 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Set size of array within structure
+                <div class="favicon favicon-unix" title="Unix &amp; Linux Stack Exchange"></div><a href="http://unix.stackexchange.com/questions/282445/grepping-a-fixed-string-at-the-beginning-of-a-line" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:106 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    grepping a fixed string at the beginning of a line
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-vi" title="Vi and Vim Stack Exchange"></div><a href="http://vi.stackexchange.com/questions/7750/how-to-manage-and-remember-many-abbreviations-in-my-vimrc" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:599 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    How to manage and remember many abbreviations in my vimrc
+                <div class="favicon favicon-space" title="Space Exploration Stack Exchange"></div><a href="http://space.stackexchange.com/questions/15235/how-do-solar-flares-degrade-orbits" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:508 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    How do solar flares degrade orbits?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-worldbuilding" title="Worldbuilding Stack Exchange"></div><a href="http://worldbuilding.stackexchange.com/questions/41385/is-there-a-more-effective-way-to-build-the-vocabulary-of-a-fictional-language-th" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:579 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Is there a more effective way to build the vocabulary of a fictional language than a word frequency list?
+                <div class="favicon favicon-dsp" title="Signal Processing Stack Exchange"></div><a href="http://dsp.stackexchange.com/questions/30740/fixed-point-arithmetic" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:295 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Fixed point arithmetic
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-stackoverflow" title="Stack Overflow"></div><a href="http://stackoverflow.com/questions/37174543/is-it-common-to-have-just-a-return-statement-in-a-php-file" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:1 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Is it common to have just a return statement in a php file
+                <div class="favicon favicon-diy" title="Home Improvement Stack Exchange"></div><a href="http://diy.stackexchange.com/questions/90392/if-metal-expands-when-heated-how-does-heating-a-bolt-loosen-it" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:73 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    If metal expands when heated, how does heating a bolt loosen it?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-english" title="English Language &amp; Usage Stack Exchange"></div><a href="http://english.stackexchange.com/questions/324880/is-the-word-stool-an-informal-word-or-a-formal-word" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:97 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Is the word &quot;stool&quot; an informal word or a formal word?
+                <div class="favicon favicon-ell" title="English Language Learners Stack Exchange"></div><a href="http://ell.stackexchange.com/questions/89733/what-is-a-casual-way-to-say-appointment" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:481 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    What is a casual way to say &quot;appointment&quot;?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-workplace" title="The Workplace Stack Exchange"></div><a href="http://workplace.stackexchange.com/questions/66792/new-employer-wants-me-to-pay-for-iso-9001-accreditation-before-employment-begins" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:423 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    New employer wants me to pay for ISO 9001 accreditation before employment begins - is this a scam?
+                <div class="favicon favicon-outdoors" title="The Great Outdoors Stack Exchange"></div><a href="http://outdoors.stackexchange.com/questions/11709/whats-the-purpose-of-the-sling-on-the-heel-of-boots" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:395 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    What&#39;s the purpose of the sling on the heel of boots?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-ethereum" title="Ethereum Stack Exchange"></div><a href="http://ethereum.stackexchange.com/questions/3852/can-you-inherit-from-a-contract-already-deployed-to-the-blockchain" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:642 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Can you inherit from a contract already deployed to the blockchain?
+                <div class="favicon favicon-english" title="English Language &amp; Usage Stack Exchange"></div><a href="http://english.stackexchange.com/questions/324991/seemingly-quintessentially-british-non-medical-meaning-for-surgery" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:97 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Seemingly quintessentially British non-medical meaning for &quot;surgery&quot;
                 </a>
 
             </li>
@@ -1250,32 +1253,68 @@ Basically, I have a ...
 
             </li>
             <li >
-                <div class="favicon favicon-tex" title="TeX - LaTeX Stack Exchange"></div><a href="http://tex.stackexchange.com/questions/309205/align-numbers-on-decimal-point-in-tabular" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:85 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Align numbers on decimal point in tabular
+                <div class="favicon favicon-cs" title="Computer Science Stack Exchange"></div><a href="http://cs.stackexchange.com/questions/57351/does-a-context-free-grammar-with-multiple-variables-have-a-starting-point" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:419 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Does a context-free grammar with multiple variables have a &quot;starting&quot; point?
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-french" title="French Language Stack Exchange"></div><a href="http://french.stackexchange.com/questions/19150/tort-vs-tord-to-mean-wrong" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:299 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Tort vs tord to mean wrong
+                <div class="favicon favicon-gaming" title="Arqade"></div><a href="http://gaming.stackexchange.com/questions/265401/dont-starve-together-alone-mode-vs-dont-starve" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:41 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Don&#39;t Starve Together - Alone mode vs Don&#39;t Starve
                 </a>
 
             </li>
             <li >
-                <div class="favicon favicon-math" title="Mathematics Stack Exchange"></div><a href="http://math.stackexchange.com/questions/1779194/what-is-bra-and-ket-notation-and-how-does-it-relate-to-hilbert-spaces" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:69 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    What is &quot;Bra&quot; and &quot;Ket&quot; notation and how does it relate to Hilbert spaces?
+                <div class="favicon favicon-worldbuilding" title="Worldbuilding Stack Exchange"></div><a href="http://worldbuilding.stackexchange.com/questions/41405/a-person-with-no-magic-in-a-magic-dependent-world" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:579 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    A person with no magic in a magic dependent world
                 </a>
 
             </li>
             <li class="dno js-hidden">
-                <div class="favicon favicon-unix" title="Unix &amp; Linux Stack Exchange"></div><a href="http://unix.stackexchange.com/questions/282445/grepping-a-fixed-string-at-the-beginning-of-a-line" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:106 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    grepping a fixed string at the beginning of a line
+                <div class="favicon favicon-ux" title="User Experience Stack Exchange"></div><a href="http://ux.stackexchange.com/questions/93989/name-on-card-or-card-number-first" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:102 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Name on card, or Card number first?
                 </a>
 
             </li>
             <li class="dno js-hidden">
-                <div class="favicon favicon-mechanics" title="Motor Vehicle Maintenance &amp; Repair Stack Exchange"></div><a href="http://mechanics.stackexchange.com/questions/29588/motorcycle-front-brake-lever-too-close-to-grip" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:224 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Motorcycle front brake lever too close to grip
+                <div class="favicon favicon-security" title="Information Security Stack Exchange"></div><a href="http://security.stackexchange.com/questions/123028/is-ignoring-a-threat-you-cannot-defend-from-a-valid-strategy" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:162 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Is ignoring a threat you cannot defend from a valid strategy?
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-travel" title="Travel Stack Exchange"></div><a href="http://travel.stackexchange.com/questions/68172/does-anybody-of-fully-refundable-flights-from-india-to-south-africa-economy-clas" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:273 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Does anybody of fully refundable flights from India to South Africa economy class?
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-puzzling" title="Puzzling Stack Exchange"></div><a href="http://puzzling.stackexchange.com/questions/32278/ghotiy-spelling" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:559 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Ghotiy spelling
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-electronics" title="Electrical Engineering Stack Exchange"></div><a href="http://electronics.stackexchange.com/questions/233687/how-does-this-current-limiting-circuit-work" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:135 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    How does this current limiting circuit work?
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-unix" title="Unix &amp; Linux Stack Exchange"></div><a href="http://unix.stackexchange.com/questions/282668/can-i-customize-the-sudo-this-incident-will-be-reported-message" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:106 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Can I customize the sudo &quot;this incident will be reported&quot; message?
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-english" title="English Language &amp; Usage Stack Exchange"></div><a href="http://english.stackexchange.com/questions/324831/word-for-a-person-who-freely-shares-others-secrets" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:97 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Word for a person who freely shares others&#39; secrets
+                </a>
+
+            </li>
+            <li class="dno js-hidden">
+                <div class="favicon favicon-vi" title="Vi and Vim Stack Exchange"></div><a href="http://vi.stackexchange.com/questions/7752/use-an-expression-as-lhs-in-a-mapping" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:599 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Use an expression as `lhs` in a mapping
                 </a>
 
             </li>
@@ -1286,56 +1325,20 @@ Basically, I have a ...
 
             </li>
             <li class="dno js-hidden">
-                <div class="favicon favicon-rpg" title="Role-playing Games Stack Exchange"></div><a href="http://rpg.stackexchange.com/questions/80011/does-a-monks-martial-arts-die-replace-all-of-a-magic-weapons-damage-or-only-t" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:122 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Does a Monk&#39;s Martial Arts die replace all of a magic weapon&#39;s damage, or only the die portion of it?
+                <div class="favicon favicon-workplace" title="The Workplace Stack Exchange"></div><a href="http://workplace.stackexchange.com/questions/66767/how-to-answer-professionally-to-coworkers-who-tease-me-because-i-am-vegan" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:423 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    How to answer professionally to coworkers who tease me because I am vegan?
                 </a>
 
             </li>
             <li class="dno js-hidden">
-                <div class="favicon favicon-travel" title="Travel Stack Exchange"></div><a href="http://travel.stackexchange.com/questions/68160/which-is-the-international-airport-in-johannesburg" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:273 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Which is the International Airport in Johannesburg?
+                <div class="favicon favicon-salesforce" title="Salesforce Stack Exchange"></div><a href="http://salesforce.stackexchange.com/questions/121547/adding-an-image-from-a-document-tab-to-email-template" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:459 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Adding an image from a document tab to email template?
                 </a>
 
             </li>
             <li class="dno js-hidden">
-                <div class="favicon favicon-scifi" title="Science Fiction &amp; Fantasy Stack Exchange"></div><a href="http://scifi.stackexchange.com/questions/127712/which-mcu-movies-should-i-see-before-watching-civil-war" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:186 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Which MCU movies should I see before watching Civil War?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-worldbuilding" title="Worldbuilding Stack Exchange"></div><a href="http://worldbuilding.stackexchange.com/questions/41462/what-would-be-the-most-extreme-form-of-a-surveillance-state-and-what-would-livi" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:579 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    What would be the most extreme form of a surveillance state? And what would living/working in it look like?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-superuser" title="Super User"></div><a href="http://superuser.com/questions/1075315/how-to-convert-an-unknown-file-to-mp3" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:3 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    How to convert an unknown file to MP3?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-workplace" title="The Workplace Stack Exchange"></div><a href="http://workplace.stackexchange.com/questions/66835/should-i-hire-the-friend" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:423 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Should I hire the friend?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-math" title="Mathematics Stack Exchange"></div><a href="http://math.stackexchange.com/questions/1780812/is-there-a-mathematical-notation-of-indexing-a-matrix" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:69 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    Is there a mathematical notation of indexing a matrix?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-academia" title="Academia Stack Exchange"></div><a href="http://academia.stackexchange.com/questions/68532/what-should-i-do-with-requests-to-be-my-phd-student" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:415 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    What should I do with requests to be my PhD student?
-                </a>
-
-            </li>
-            <li class="dno js-hidden">
-                <div class="favicon favicon-academia" title="Academia Stack Exchange"></div><a href="http://academia.stackexchange.com/questions/68497/how-to-emphasize-the-main-contributor-to-a-paper-when-the-field-typically-orders" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:415 }); posts_hot_network.click({ item_type:2, location:9 })">
-                    How to emphasize the main contributor to a paper when the field typically orders authors alphabetically?
+                <div class="favicon favicon-buddhism" title="Buddhism Stack Exchange"></div><a href="http://buddhism.stackexchange.com/questions/15086/investing-in-poultry-stocks-and-buddhism" class="js-gps-track" data-gps-track="site.switch({ item_type:9, target_site:565 }); posts_hot_network.click({ item_type:2, location:9 })">
+                    Investing in poultry stocks and Buddhism
                 </a>
 
             </li>
