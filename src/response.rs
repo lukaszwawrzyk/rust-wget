@@ -5,7 +5,7 @@ use std::fs::File;
 use std::path::Path;
 use std::net::TcpStream;
 use std::collections::HashMap;
-
+use progress::Progress;
 
 struct ResponseHead {
   status_code: u16,
@@ -22,7 +22,7 @@ impl ResponseHead {
   }
 }
 
-const BUFFER_SIZE: usize = 512;
+const BUFFER_SIZE: usize = 8192;
 
 pub struct Response {
   reader: BufReader<TcpStream>,
@@ -42,7 +42,9 @@ impl Response {
     match response_head.content_length() {
       Some(content_length) => {
         let mut destination = try_str!(File::create(destination_path));
-        self.download_fixed_bytes(content_length, &mut destination)
+        let mut progress = Progress::new();
+        progress.chunk(content_length);
+        self.download_fixed_bytes(content_length, &mut destination, &mut progress)
       },
       None =>
         if response_head.is_chunked() {
@@ -55,11 +57,14 @@ impl Response {
   }
 
   fn download_chunked(&mut self, destination: &mut Write) -> Result<()> {
+    let mut progress = Progress::new();
     loop {
       let chunk_size = try!(self.read_line_r_n()
         .and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
 
-      try!(self.download_fixed_bytes(chunk_size, destination));
+      progress.chunk(chunk_size);
+
+      try!(self.download_fixed_bytes(chunk_size, destination, &mut progress));
       try!(self.eat_r_n());
 
       if chunk_size == 0 {
@@ -68,7 +73,7 @@ impl Response {
     }
   }
 
-  fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write) -> Result<()> {
+  fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> Result<()> {
     let mut total_bytes_read: u64 = 0;
     loop {
       let bytes_left = expected_length - total_bytes_read;
@@ -88,6 +93,8 @@ impl Response {
       }
 
       try_str!(destination.write_all(&self.buffer[0..bytes_read]));
+
+      progress.update(bytes_read as u64);
 
       total_bytes_read += bytes_read as u64;
 

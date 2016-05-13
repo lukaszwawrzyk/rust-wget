@@ -1,11 +1,13 @@
 #![feature(advanced_slice_patterns, slice_patterns)]
 
 extern crate url;
+extern crate time;
 
 #[macro_use]
 mod common;
 mod request;
 mod response;
+mod progress;
 
 use std::env;
 use response::Response;
@@ -20,12 +22,12 @@ use std::result;
 
 const DEFAULT_FILE_NAME: &'static str = "out";
 
-fn download(source_url: &str, file_name_opt: Option<String>) -> Result<String> {
+fn download(source_url: &str) -> Result<String> {
   let url = try_str!(Url::parse(source_url));
 
   let mut socket = try!(connect(&url));
 
-  let file_name = file_name_opt.unwrap_or(file_name_from_url(&url));
+  let file_name = file_name_from_url(&url);
   let destination_path = Path::new(&file_name);
 
 
@@ -64,9 +66,7 @@ fn main() {
 
   let result = match &args[..] {
     [_, ref source_url] =>
-      download(source_url, None),
-    [_, ref source_url, ref destination_file] =>
-      download(source_url, Some(destination_file.to_string())),
+      download(source_url),
     [ref name, ..] =>
       Err(format!("Usage: {} <url> [dest_file]", name).to_owned()),
     _ =>
@@ -74,12 +74,133 @@ fn main() {
   };
 
   match result {
-    Ok(msg) => println!("{}", msg),
-    Err(e) => println!("{}", e),
+    Ok(msg) => println!("\n{}", msg),
+    Err(e) => println!("\n{}", e),
   }
 }
 
-
+// TODO follow redirects
 // TODO show progress in %, kb of all, speed
 // TODO check https
 // TODO check status code to see if should look for eof or abort
+
+/*
+-t number
+--tries=number
+    Set number of tries to number. Specify 0 or inf for infinite retrying.  The default is to retry
+    20 times, with the exception of fatal errors like "connection refused" or "not found" (404),
+    which are not retried.
+
+--backups=backups
+    Before (over)writing a file, back up an existing file by adding a .1 suffix (_1 on VMS) to the
+    file name.  Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond
+    that).
+
+-c
+--continue
+    Continue getting a partially-downloaded file.  This is useful when you want to finish up a
+    download started by a previous instance of Wget, or by another program.  For instance:
+
+            wget -c ftp://sunsite.doc.ic.ac.uk/ls-lR.Z
+
+    If there is a file named ls-lR.Z in the current directory, Wget will assume that it is the first
+    portion of the remote file, and will ask the server to continue the retrieval from an offset
+    equal to the length of the local file.
+
+    Note that you don't need to specify this option if you just want the current invocation of Wget
+    to retry downloading a file should the connection be lost midway through.  This is the default
+    behavior.  -c only affects resumption of downloads started prior to this invocation of Wget, and
+    whose local files are still sitting around.
+
+    Without -c, the previous example would just download the remote file to ls-lR.Z.1, leaving the
+    truncated ls-lR.Z file alone.
+
+    Beginning with Wget 1.7, if you use -c on a non-empty file, and it turns out that the server
+     does not support continued downloading, Wget will refuse to start the download from scratch,
+     which would effectively ruin existing contents.  If you really want the download to start from
+     scratch, remove the file.
+
+     Also beginning with Wget 1.7, if you use -c on a file which is of equal size as the one on the
+     server, Wget will refuse to download the file and print an explanatory message.  The same
+     happens when the file is smaller on the server than locally (presumably because it was changed
+     on the server since your last download attempt)---because "continuing" is not meaningful, no
+     download occurs.
+
+     On the other side of the coin, while using -c, any file that's bigger on the server than locally
+     will be considered an incomplete download and only "(length(remote) - length(local))" bytes will
+     be downloaded and tacked onto the end of the local file.  This behavior can be desirable in
+     certain cases---for instance, you can use wget -c to download just the new portion that's been
+     appended to a data collection or log file.
+
+     However, if the file is bigger on the server because it's been changed, as opposed to just
+     appended to, you'll end up with a garbled file.  Wget has no way of verifying that the local
+     file is really a valid prefix of the remote file.  You need to be especially careful of this
+     when using -c in conjunction with -r, since every file will be considered as an "incomplete
+     download" candidate.
+
+ -S
+ --server-response
+   Print the headers sent by HTTP servers and responses sent by FTP servers.
+
+-T seconds
+--timeout=seconds
+   Set the network timeout to seconds seconds.  This is equivalent to specifying --dns-timeout,
+   --connect-timeout, and --read-timeout, all at the same time.
+
+   When interacting with the network, Wget can check for timeout and abort the operation if it
+   takes too long.  This prevents anomalies like hanging reads and infinite connects.  The only
+   timeout enabled by default is a 900-second read timeout.  Setting a timeout to 0 disables it
+   altogether.  Unless you know what you are doing, it is best not to change the default timeout
+   settings.
+
+   All timeout-related options accept decimal values, as well as subsecond values.  For example,
+   0.1 seconds is a legal (though unwise) choice of timeout.  Subsecond timeouts are useful for
+   checking server response times or for testing network latency.
+
+--user=user
+--password=password
+   Specify the username user and password password for both FTP and HTTP file retrieval.  These
+   parameters can be overridden using the --ftp-user and --ftp-password options for FTP connections
+   and the --http-user and --http-password options for HTTP connections.
+
+--ask-password
+   Prompt for a password for each connection established. Cannot be specified when --password is
+   being used, because they are mutually exclusive.
+
+
+--header=header-line
+   Send header-line along with the rest of the headers in each HTTP request.  The supplied header
+   is sent as-is, which means it must contain name and value separated by colon, and must not
+   contain newlines.
+
+   You may define more than one additional header by specifying --header more than once.
+
+           wget --header='Accept-Charset: iso-8859-2' \
+                --header='Accept-Language: hr'        \
+                  http://fly.srk.fer.hr/
+
+   Specification of an empty string as the header value will clear all previous user-defined
+   headers.
+
+   As of Wget 1.10, this option can be used to override headers otherwise generated automatically.
+   This example instructs Wget to connect to localhost, but to specify foo.bar in the "Host"
+   header:
+
+           wget --header="Host: foo.bar" http://localhost/
+
+   In versions of Wget prior to 1.10 such use of --header caused sending of duplicate headers.
+
+HTTPS
+
+logi:
+
+Translacja fly.srk.fer.hr (fly.srk.fer.hr)... 80.241.220.122
+Łączenie się z fly.srk.fer.hr (fly.srk.fer.hr)|80.241.220.122|:80... połączono.
+Żądanie HTTP wysłano, oczekiwanie na odpowiedź... 200 OK
+Długość: 1410 (1,4K) [text/html]
+Zapis do: `fly.srk.fer.hr/index.html'
+
+     0K .                                                     100%  214M=0s
+
+
+*/
