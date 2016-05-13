@@ -78,50 +78,38 @@ fn main() {
   opts.optflag("c", "continue", "Continue getting a partially-downloaded file");
   opts.optflag("S", "server-response", "Print the headers sent by HTTP servers");
   opts.optflag("", "ask-password", "Prompt for a password for each connection established");
-  opts.optopt("t", "tries", "Set number of tries to number. Specify 0 for infinite retrying.", "number");
-  opts.optopt("T", "timeout", "Set the network timeout to seconds seconds", "seconds");
-  opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond that).", "backups");
-  opts.optopt("", "user", "Specify the username for HTTP file retrieval", "user");
-  opts.optopt("", "password", "Specify the password for HTTP file retrieval", "password");
-  opts.optmulti("", "header", "Send header-line along with the rest of the headers in each HTTP request", "header-line");
+  opts.optopt("t", "tries", "Set number of tries to number. Specify 0 for infinite retrying.", "NUMBER");
+  opts.optopt("T", "timeout", "Set the network timeout to seconds seconds", "SECONDS");
+  opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond that).", "BACKUPS");
+  opts.optopt("", "user", "Specify the username for HTTP file retrieval", "USER");
+  opts.optopt("", "password", "Specify the password for HTTP file retrieval", "PASSWORD");
+  opts.optmulti("", "header", "Send header-line along with the rest of the headers in each HTTP request", "HEADER-LINE");
 
   let matches = match opts.parse(&args[1..]) {
     Ok(m) => m,
-    Err(err) => panic!(err.to_string()),
+    Err(err) => return print_usage(&program, opts),
   };
 
-  if matches.opt_present("h") { println!("has h"); };
-  if matches.opt_present("c") { println!("has c"); };
-  if matches.opt_present("S") { println!("has s"); };
-  if matches.opt_present("ask-password") { println!("has ask-password"); };
-  matches.opt_str("t").map(|s| println!("tries {:?}", s));
-  matches.opt_str("T").map(|s| println!("timeout {:?}", s));
-  matches.opt_str("backups").map(|s| println!("backups {:?}", s));
-  matches.opt_str("user").map(|s| println!("user {:?}", s));
-  matches.opt_str("password").map(|s| println!("password {:?}", s));
-  let vec: Vec<()> = matches.opt_strs("header").iter().map(|s| println!("header {:?}", s)).collect();
-  let vec2: Vec<()> = matches.free.iter().map(|s| println!("free {:?}", s)).collect();
+  if matches.opt_present("h") || matches.free.is_empty() {
+    return print_usage(&program, opts);
+  }
 
-/*
-  let result = match &args[..] {
-    [_, ref source_url] =>
+  let result = match &matches.free[..] {
+    [ref source_url] =>
       download(source_url),
-    [ref name, ..] =>
-      Err(format!("Usage: {} <url> [dest_file]", name).to_owned()),
     _ =>
-      Err("Invalid argments".to_owned()),
+      Err("Multiple files are not supported".to_owned()), // TODO yet
   };
 
   match result {
     Ok(msg) => println!("\n{}", msg),
     Err(e) => println!("\n{}", e),
   }
-*/
 }
 
+// TODO check https
 // TODO follow redirects
 // TODO show progress in %, kb of all, speed
-// TODO check https
 // TODO check status code to see if should look for eof or abort
 
 /*
