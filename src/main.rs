@@ -2,6 +2,7 @@
 
 extern crate url;
 extern crate time;
+extern crate getopts;
 
 #[macro_use]
 mod common;
@@ -9,6 +10,8 @@ mod request;
 mod response;
 mod progress;
 
+use getopts::Options;
+use getopts::ParsingStyle;
 use std::env;
 use response::Response;
 use request::Request;
@@ -61,9 +64,45 @@ fn download(source_url: &str) -> Result<String> {
   }
 }
 
+fn print_usage(program: &str, opts: Options) {
+    let brief = format!("Usage: {} [options] URL", program);
+    print!("{}", opts.usage(&brief));
+}
+
 fn main() {
   let args: Vec<String> = env::args().collect();
+  let program = args[0].clone();
+  let mut opts = Options::new();
+  opts.parsing_style(ParsingStyle::FloatingFrees);
+  opts.optflag("h", "help", "Show this help menu");
+  opts.optflag("c", "continue", "Continue getting a partially-downloaded file");
+  opts.optflag("S", "server-response", "Print the headers sent by HTTP servers");
+  opts.optflag("", "ask-password", "Prompt for a password for each connection established");
+  opts.optopt("t", "tries", "Set number of tries to number. Specify 0 for infinite retrying.", "number");
+  opts.optopt("T", "timeout", "Set the network timeout to seconds seconds", "seconds");
+  opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond that).", "backups");
+  opts.optopt("", "user", "Specify the username for HTTP file retrieval", "user");
+  opts.optopt("", "password", "Specify the password for HTTP file retrieval", "password");
+  opts.optmulti("", "header", "Send header-line along with the rest of the headers in each HTTP request", "header-line");
 
+  let matches = match opts.parse(&args[1..]) {
+    Ok(m) => m,
+    Err(err) => panic!(err.to_string()),
+  };
+
+  if matches.opt_present("h") { println!("has h"); };
+  if matches.opt_present("c") { println!("has c"); };
+  if matches.opt_present("S") { println!("has s"); };
+  if matches.opt_present("ask-password") { println!("has ask-password"); };
+  matches.opt_str("t").map(|s| println!("tries {:?}", s));
+  matches.opt_str("T").map(|s| println!("timeout {:?}", s));
+  matches.opt_str("backups").map(|s| println!("backups {:?}", s));
+  matches.opt_str("user").map(|s| println!("user {:?}", s));
+  matches.opt_str("password").map(|s| println!("password {:?}", s));
+  let vec: Vec<()> = matches.opt_strs("header").iter().map(|s| println!("header {:?}", s)).collect();
+  let vec2: Vec<()> = matches.free.iter().map(|s| println!("free {:?}", s)).collect();
+
+/*
   let result = match &args[..] {
     [_, ref source_url] =>
       download(source_url),
@@ -77,6 +116,7 @@ fn main() {
     Ok(msg) => println!("\n{}", msg),
     Err(e) => println!("\n{}", e),
   }
+*/
 }
 
 // TODO follow redirects
