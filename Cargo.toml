@@ -7,6 +7,8 @@ authors = ["Lukasz <lukasz.wawrzyk@gmail.com>"]
 time = "0.1.35"
 getopts = "0.2.14"
 rpassword = "0.2.2"
+rustc-serialize = "0.3.19"
+regex = "0.1.69"
 
 [dependencies.url]
 git = "https://github.com/servo/rust-url"

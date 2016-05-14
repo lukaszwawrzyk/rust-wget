@@ -1,9 +1,11 @@
 #![feature(advanced_slice_patterns, slice_patterns)]
 
+extern crate regex;
 extern crate url;
 extern crate time;
 extern crate getopts;
 extern crate rpassword;
+extern crate rustc_serialize;
 
 #[macro_use]
 mod common;
@@ -11,66 +13,21 @@ mod request;
 mod response;
 mod progress;
 mod options;
+mod http;
 
 use options::Options;
 use std::env;
-use response::Response;
-use request::Request;
 use common::Result;
-use std::path::Path;
-use std::net::TcpStream;
-use url::Url;
 use std::result;
-
-
-
-const DEFAULT_FILE_NAME: &'static str = "out";
-
-fn download(url: &Url) -> Result<String> {
-  let mut socket = try!(connect(url));
-
-  let file_name = file_name_from_url(url);
-  let destination_path = Path::new(&file_name);
-
-
-  let request = try!(Request::format(url));
-  try!(request.send(&mut socket));
-
-  let mut response = Response::new(socket);
-
-  return response.download(&destination_path).map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string());
-
-
-  fn connect(url: &Url) -> Result<TcpStream> {
-    fn default_port(url: &Url) -> result::Result<u16, ()> {
-      match url.scheme() {
-        "http" => Ok(80),
-        _ => Err(()),
-      }
-    }
-
-    let socket = url.with_default_port(default_port).and_then(TcpStream::connect);
-
-    str_err!(socket)
-  }
-
-  fn file_name_from_url(url: &Url) -> String {
-    url.path_segments()
-      .and_then(|segments| segments.last())
-      .map(|s| s.to_string())
-      .and_then(|s| if s.is_empty() { None } else { Some(s) })
-      .unwrap_or(DEFAULT_FILE_NAME.to_string())
-  }
-}
-
-
+use http::Http;
 
 fn main() {
   let args: Vec<String> = env::args().collect();
   let options = Options::retreive(args);
 
   let result = options.and_then(|opts| {
-    download(&opts.urls[0])
+    let http = Http::new(opts);
+    http.download_all()
   });
 
   match result {
@@ -90,12 +47,6 @@ fn main() {
     Set number of tries to number. Specify 0 or inf for infinite retrying.  The default is to retry
     20 times, with the exception of fatal errors like "connection refused" or "not found" (404),
     which are not retried.
-
---backups=backups
-    Before (over)writing a file, back up an existing file by adding a .1 suffix (_1 on VMS) to the
-    file name.  Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond
-    that).
-
 -c
 --continue
     Continue getting a partially-downloaded file.  This is useful when you want to finish up a
@@ -138,10 +89,6 @@ fn main() {
      when using -c in conjunction with -r, since every file will be considered as an "incomplete
      download" candidate.
 
- -S
- --server-response
-   Print the headers sent by HTTP servers and responses sent by FTP servers.
-
 -T seconds
 --timeout=seconds
    Set the network timeout to seconds seconds.  This is equivalent to specifying --dns-timeout,
@@ -156,39 +103,6 @@ fn main() {
    All timeout-related options accept decimal values, as well as subsecond values.  For example,
    0.1 seconds is a legal (though unwise) choice of timeout.  Subsecond timeouts are useful for
    checking server response times or for testing network latency.
-
---user=user
---password=password
-   Specify the username user and password password for both FTP and HTTP file retrieval.  These
-   parameters can be overridden using the --ftp-user and --ftp-password options for FTP connections
-   and the --http-user and --http-password options for HTTP connections.
-
---ask-password
-   Prompt for a password for each connection established. Cannot be specified when --password is
-   being used, because they are mutually exclusive.
-
-
---header=header-line
-   Send header-line along with the rest of the headers in each HTTP request.  The supplied header
-   is sent as-is, which means it must contain name and value separated by colon, and must not
-   contain newlines.
-
-   You may define more than one additional header by specifying --header more than once.
-
-           wget --header='Accept-Charset: iso-8859-2' \
-                --header='Accept-Language: hr'        \
-                  http://fly.srk.fer.hr/
-
-   Specification of an empty string as the header value will clear all previous user-defined
-   headers.
-
-   As of Wget 1.10, this option can be used to override headers otherwise generated automatically.
-   This example instructs Wget to connect to localhost, but to specify foo.bar in the "Host"
-   header:
-
-           wget --header="Host: foo.bar" http://localhost/
-
-   In versions of Wget prior to 1.10 such use of --header caused sending of duplicate headers.
 
 HTTPS
 

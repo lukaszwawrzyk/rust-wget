@@ -17,8 +17,8 @@ pub struct Options {
 }
 
 pub struct Credentials {
-  user: String,
-  password: String,
+  pub user: String,
+  pub password: String,
 }
 
 impl Credentials {

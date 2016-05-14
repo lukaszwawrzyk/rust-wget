@@ -1,4 +1,5 @@
 use common::Result;
+use common;
 use std::io;
 use std::io::{BufReader, Read, Write, BufRead};
 use std::fs::File;
@@ -6,6 +7,7 @@ use std::path::Path;
 use std::net::TcpStream;
 use std::collections::HashMap;
 use progress::Progress;
+use options::Options;
 
 struct ResponseHead {
   status_code: u16,
@@ -24,16 +26,18 @@ impl ResponseHead {
 
 const BUFFER_SIZE: usize = 8192;
 
-pub struct Response {
+pub struct Response<'a> {
   reader: BufReader<TcpStream>,
   buffer: [u8; BUFFER_SIZE],
+  options: &'a Options
 }
 
-impl Response {
-  pub fn new(socket: TcpStream) -> Response {
+impl<'a> Response<'a> {
+  pub fn new(socket: TcpStream, options: &Options) -> Response {
     Response {
       reader: BufReader::new(socket),
       buffer: [0; BUFFER_SIZE],
+      options: options,
     }
   }
 
@@ -106,10 +110,16 @@ impl Response {
 
   fn get_head(&mut self) -> Result<ResponseHead> {
     self.read_raw_head().and_then(|raw_head| {
+      if self.options.show_response {
+          for line in &raw_head {
+              println!("{}", line);
+          }
+      }
+
       match &raw_head[..] {
         [ref status_line, raw_headers..] =>
           Self::get_status_code(&status_line).map(|code| {
-            let headers = Self::get_header_map(raw_headers);
+            let headers = common::parse_header_lines(raw_headers);
             ResponseHead {
               status_code: code,
               headers: headers
@@ -125,16 +135,6 @@ impl Response {
       .ok_or("Bad response - no status code found".to_owned())
       .and_then(|code| code.parse::<u16>()
         .map_err(|_| "Bad response - invalid status code".to_owned()))
-  }
-
-  fn get_header_map(header_lines: &[String]) -> HashMap<String, String> {
-    header_lines.into_iter().flat_map(|line| {
-      let splitted: Vec<&str> = line.split(": ").collect();
-      match &splitted[..] {
-        [key, value] => Some((key.to_string(), value.to_string())),
-        _ => None
-      }
-    }).collect()
   }
 
   fn read_raw_head(&mut self) -> Result<Vec<String>> {
