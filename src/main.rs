@@ -3,15 +3,16 @@
 extern crate url;
 extern crate time;
 extern crate getopts;
+extern crate rpassword;
 
 #[macro_use]
 mod common;
 mod request;
 mod response;
 mod progress;
+mod options;
 
-use getopts::Options;
-use getopts::ParsingStyle;
+use options::Options;
 use std::env;
 use response::Response;
 use request::Request;
@@ -25,16 +26,14 @@ use std::result;
 
 const DEFAULT_FILE_NAME: &'static str = "out";
 
-fn download(source_url: &str) -> Result<String> {
-  let url = try_str!(Url::parse(source_url));
+fn download(url: &Url) -> Result<String> {
+  let mut socket = try!(connect(url));
 
-  let mut socket = try!(connect(&url));
-
-  let file_name = file_name_from_url(&url);
+  let file_name = file_name_from_url(url);
   let destination_path = Path::new(&file_name);
 
 
-  let request = try!(Request::format(&url));
+  let request = try!(Request::format(url));
   try!(request.send(&mut socket));
 
   let mut response = Response::new(socket);
@@ -64,42 +63,15 @@ fn download(source_url: &str) -> Result<String> {
   }
 }
 
-fn print_usage(program: &str, opts: Options) {
-    let brief = format!("Usage: {} [options] URL", program);
-    print!("{}", opts.usage(&brief));
-}
+
 
 fn main() {
   let args: Vec<String> = env::args().collect();
-  let program = args[0].clone();
-  let mut opts = Options::new();
-  opts.parsing_style(ParsingStyle::FloatingFrees);
-  opts.optflag("h", "help", "Show this help menu");
-  opts.optflag("c", "continue", "Continue getting a partially-downloaded file");
-  opts.optflag("S", "server-response", "Print the headers sent by HTTP servers");
-  opts.optflag("", "ask-password", "Prompt for a password for each connection established");
-  opts.optopt("t", "tries", "Set number of tries to number. Specify 0 for infinite retrying.", "NUMBER");
-  opts.optopt("T", "timeout", "Set the network timeout to seconds seconds", "SECONDS");
-  opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond that).", "BACKUPS");
-  opts.optopt("", "user", "Specify the username for HTTP file retrieval", "USER");
-  opts.optopt("", "password", "Specify the password for HTTP file retrieval", "PASSWORD");
-  opts.optmulti("", "header", "Send header-line along with the rest of the headers in each HTTP request", "HEADER-LINE");
+  let options = Options::retreive(args);
 
-  let matches = match opts.parse(&args[1..]) {
-    Ok(m) => m,
-    Err(err) => return print_usage(&program, opts),
-  };
-
-  if matches.opt_present("h") || matches.free.is_empty() {
-    return print_usage(&program, opts);
-  }
-
-  let result = match &matches.free[..] {
-    [ref source_url] =>
-      download(source_url),
-    _ =>
-      Err("Multiple files are not supported".to_owned()), // TODO yet
-  };
+  let result = options.and_then(|opts| {
+    download(&opts.urls[0])
+  });
 
   match result {
     Ok(msg) => println!("\n{}", msg),
