@@ -17,8 +17,6 @@ mod http;
 
 use options::Options;
 use std::env;
-use common::Result;
-use std::result;
 use http::Http;
 
 fn main() {

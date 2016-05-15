@@ -2,73 +2,54 @@ use common::Result;
 use common;
 use std::io;
 use std::io::{BufReader, Read, Write, BufRead};
-use std::fs::File;
-use std::path::Path;
 use std::net::TcpStream;
 use std::collections::HashMap;
 use progress::Progress;
-use options::Options;
 
-struct ResponseHead {
-  status_code: u16,
+pub struct ResponseHead {
+  pub status_code: u16,
   headers: HashMap<String, String>,
+  raw: Vec<String>,
 }
 
 impl ResponseHead {
-  fn content_length(&self) -> Option<u64> {
+  pub fn content_length(&self) -> Option<u64> {
     self.headers.get("Content-Length").and_then(|num| num.parse::<u64>().ok())
   }
 
-  fn is_chunked(&self) -> bool {
+  pub fn is_chunked(&self) -> bool {
     self.headers.get("Transfer-Encoding").map_or(false, |encoding| encoding == "chunked")
+  }
+
+  pub fn print_raw(&self) -> () {
+    for line in &self.raw {
+      println!("{}", line);
+    }
   }
 }
 
-const BUFFER_SIZE: usize = 8192;
+const BUFFER_SIZE: usize = 16 * 1024;
 
-pub struct Response<'a> {
+pub struct Response {
   reader: BufReader<TcpStream>,
   buffer: [u8; BUFFER_SIZE],
-  options: &'a Options
 }
 
-impl<'a> Response<'a> {
-  pub fn new(socket: TcpStream, options: &Options) -> Response {
+impl Response {
+  pub fn new(socket: TcpStream) -> Response {
     Response {
       reader: BufReader::new(socket),
       buffer: [0; BUFFER_SIZE],
-      options: options,
     }
   }
 
-  pub fn download(&mut self, destination_path: &Path) -> Result<()> {
-    let response_head = try!(self.get_head());
-    match response_head.content_length() {
-      Some(content_length) => {
-        let mut destination = try_str!(File::create(destination_path));
-        let mut progress = Progress::new();
-        progress.chunk(content_length);
-        self.download_fixed_bytes(content_length, &mut destination, &mut progress)
-      },
-      None =>
-        if response_head.is_chunked() {
-          let mut destination = try_str!(File::create(destination_path));
-          self.download_chunked(&mut destination)
-        } else {
-          Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
-        }
-    }
-  }
-
-  fn download_chunked(&mut self, destination: &mut Write) -> Result<()> {
-    let mut progress = Progress::new();
+  pub fn read_chunked(&mut self, destination: &mut Write, progress: &mut Progress) -> Result<()> {
     loop {
-      let chunk_size = try!(self.read_line_r_n()
-        .and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
+      let chunk_size = try!(self.read_line_r_n().and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
 
-      progress.chunk(chunk_size);
+      progress.chunk_start(chunk_size);
 
-      try!(self.download_fixed_bytes(chunk_size, destination, &mut progress));
+      try!(self.read_fixed_bytes(chunk_size, destination, progress));
       try!(self.eat_r_n());
 
       if chunk_size == 0 {
@@ -77,16 +58,12 @@ impl<'a> Response<'a> {
     }
   }
 
-  fn download_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> Result<()> {
+  pub fn read_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> Result<()> {
     let mut total_bytes_read: u64 = 0;
     loop {
       let bytes_left = expected_length - total_bytes_read;
 
-      let bytes_read: usize = if bytes_left < BUFFER_SIZE as u64 {
-        try_str!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]))
-      } else {
-        try_str!(self.reader.read(&mut self.buffer[..]))
-      };
+      let bytes_read: usize = try_str!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]));
 
       if bytes_read == 0 {
         if total_bytes_read != expected_length {
@@ -108,21 +85,16 @@ impl<'a> Response<'a> {
     }
   }
 
-  fn get_head(&mut self) -> Result<ResponseHead> {
+  pub fn read_head(&mut self) -> Result<ResponseHead> {
     self.read_raw_head().and_then(|raw_head| {
-      if self.options.show_response {
-          for line in &raw_head {
-              println!("{}", line);
-          }
-      }
-
       match &raw_head[..] {
         [ref status_line, raw_headers..] =>
           Self::get_status_code(&status_line).map(|code| {
             let headers = common::parse_header_lines(raw_headers);
             ResponseHead {
               status_code: code,
-              headers: headers
+              headers: headers,
+              raw: raw_head.clone(),
             }
           }),
         _ => Err("Invalid response format".to_owned()),
@@ -132,9 +104,9 @@ impl<'a> Response<'a> {
 
   fn get_status_code(line: &String) -> Result<u16> {
     line.split_whitespace().nth(1)
-      .ok_or("Bad response - no status code found".to_owned())
+      .ok_or(format!("Bad response: no status code found in {}", line).to_owned())
       .and_then(|code| code.parse::<u16>()
-        .map_err(|_| "Bad response - invalid status code".to_owned()))
+        .map_err(|_| format!("Bad response - invalid status code {}", code).to_owned()))
   }
 
   fn read_raw_head(&mut self) -> Result<Vec<String>> {

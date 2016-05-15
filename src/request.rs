@@ -15,33 +15,54 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn format(url: &Url, options: &Options) -> Result<Request> {
+  pub fn default(url: &Url, options: &Options) -> Result<Request> {
+    Self::build(url, options, HashMap::new())
+  }
+
+  pub fn with_range_from(url: &Url, options: &Options, range_from: u64) -> Result<Request> {
+    let mut headers = HashMap::new();
+    headers.insert("Range".to_string(), format!("bytes={}-", range_from).to_string());
+    Self::build(url, options, headers)
+  }
+
+  fn build(url: &Url, options: &Options, special_headers: HashMap<String, String>) -> Result<Request> {
     let head_line = format!("GET {} HTTP/1.1", url.path()).to_string();
 
     let mut headers: HashMap<String, String> = HashMap::new();
+
+    // basic headers
     let host = try!(url.host_str().ok_or("No host found in url".to_owned()));
     headers.insert("Host".to_string(), host.to_string());
     headers.insert("Accept".to_string(), "*/*".to_string());
 
+    // credentials
     if let Some(ref credentials) = options.credentials {
       let auth_header = Self::format_auth_header(&credentials);
       headers.insert("Authorization".to_string(), auth_header);
     }
 
+    // additional headers (internal)
+    for (k, v) in special_headers {
+      headers.insert(k, v);
+    }
+
+    // headers from user that may override current
     let extra_headers = common::parse_header_lines(&options.headers[..]);
     for (k, v) in extra_headers {
       headers.insert(k, v);
     }
 
-    let mut lines: Vec<String> = headers.iter().map(|(k, v)| {
-        format!("{}: {}", k, v).to_string()
-    }).collect();
+    Ok(Self::format_request(head_line, headers))
+  }
+
+  fn format_request(head_line: String, headers: HashMap<String, String>) -> Request {
+    let mut lines: Vec<String> = headers.iter().map(|(k, v)| format!("{}: {}", k, v).to_string()).collect();
     lines.insert(0, head_line);
     lines.push("\r\n".to_string());
 
-    Ok(Request{
+    Request {
       content: lines.join("\r\n"),
-    })
+    }
   }
 
   fn format_auth_header(credentials: &Credentials) -> String {

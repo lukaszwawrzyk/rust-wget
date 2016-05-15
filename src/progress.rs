@@ -1,5 +1,4 @@
 use std::ops::Add;
-use common::Result;
 use time::Duration;
 use time::precise_time_ns;
 
@@ -61,7 +60,7 @@ impl Progress {
     }
   }
 
-  pub fn chunk(&mut self, size: u64) -> () {
+  pub fn chunk_start(&mut self, size: u64) -> () {
     self.current_chunk_size = size;
     self.steps.clear();
 

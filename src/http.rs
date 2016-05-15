@@ -8,6 +8,8 @@ use url::Url;
 use std::fs;
 use std::result;
 use std::io;
+use progress::Progress;
+use std::fs::File;
 
 pub struct Http {
     options: Options,
@@ -23,22 +25,43 @@ impl Http {
   }
 
   pub fn download_all(&self) -> Result<String> {
-    return self.download_one(&self.options.urls[0]);
+    self.download_one(&self.options.urls[0])
   }
 
   fn download_one(&self, url: &Url) -> Result<String> {
+      let mut progress = Progress::new();
       let mut socket = try!(connect(url));
 
       let basic_file_name = file_name_from_url(url);
       let file_name = try!(self.backup_file_name(&basic_file_name));
       let destination_path = Path::new(&file_name);
 
-      let request = try!(Request::format(url, &self.options));
+      let request = try!(Request::default(url, &self.options));
       try!(request.send(&mut socket));
 
-      let mut response = Response::new(socket, &self.options);
-      return response.download(&destination_path)
-        .map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string());
+      let mut response = Response::new(socket);
+
+      let response_head = try!(response.read_head());
+      if self.options.show_response {
+        response_head.print_raw();
+      }
+
+      let result = match response_head.content_length() {
+        Some(content_length) => {
+          let mut destination = try_str!(File::create(destination_path));
+          progress.chunk_start(content_length);
+          response.read_fixed_bytes(content_length, &mut destination, &mut progress)
+        },
+        None =>
+          if response_head.is_chunked() {
+            let mut destination = try_str!(File::create(destination_path));
+            response.read_chunked(&mut destination, &mut progress)
+          } else {
+            Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
+          },
+      };
+
+      return result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string());
 
 
       fn connect(url: &Url) -> Result<TcpStream> {
@@ -107,7 +130,7 @@ impl Http {
   }
 
   fn shift_names(basic_name: &str, limit: u64) -> io::Result<()> {
-    fs::remove_file(to_path(basic_name, limit));
+    try!(fs::remove_file(to_path(basic_name, limit)));
     for i in (1..limit).rev() {
       try!(fs::rename(to_path(basic_name, i), to_path(basic_name, i + 1)));
     }
