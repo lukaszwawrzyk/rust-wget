@@ -9,7 +9,6 @@ use progress::Progress;
 pub struct ResponseHead {
   pub status_code: u16,
   headers: HashMap<String, String>,
-  raw: Vec<String>,
 }
 
 impl ResponseHead {
@@ -19,12 +18,6 @@ impl ResponseHead {
 
   pub fn is_chunked(&self) -> bool {
     self.headers.get("Transfer-Encoding").map_or(false, |encoding| encoding == "chunked")
-  }
-
-  pub fn print_raw(&self) -> () {
-    for line in &self.raw {
-      println!("{}", line);
-    }
   }
 }
 
@@ -85,8 +78,15 @@ impl Response {
     }
   }
 
-  pub fn read_head(&mut self) -> Result<ResponseHead> {
+  pub fn read_head(&mut self, print_raw_head: bool) -> Result<ResponseHead> {
     self.read_raw_head().and_then(|raw_head| {
+
+      if print_raw_head {
+        for line in &raw_head {
+          println!("{}", line);
+        }
+      }
+
       match &raw_head[..] {
         [ref status_line, raw_headers..] =>
           Self::get_status_code(&status_line).map(|code| {
@@ -94,7 +94,6 @@ impl Response {
             ResponseHead {
               status_code: code,
               headers: headers,
-              raw: raw_head.clone(),
             }
           }),
         _ => Err("Invalid response format".to_owned()),

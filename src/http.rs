@@ -31,25 +31,22 @@ impl Http {
 
   fn download_one(&self, url: &Url) -> Result<String> {
       let mut progress = Progress::new();
-      let mut socket = try!(connect(url));
+      let mut socket = try!(Self::connect(url));
 
-      let basic_file_name = file_name_from_url(url);
+      let basic_file_name = Self::file_name_from_url(url);
 
 // TODO continue ++++++ on progress bar
 // TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
       let file_metadata = fs::metadata(Path::new(&basic_file_name));
-      return if self.options.continue_download && file_metadata.is_ok() {
+      if self.options.continue_download && file_metadata.is_ok() {
         let file_size = file_metadata.unwrap().len();
 
         try!(Request::send_with_range_from(&mut socket, url, &self.options, file_size));
 
         let mut response = Response::new(socket);
 
-        let response_head = try!(response.read_head());
-        if self.options.show_response {
-          response_head.print_raw();
-        }
+        let response_head = try!(response.read_head(self.options.show_response));
 
         if response_head.status_code == 416 {
           Ok("File is already fully downloaded. Nothing to do.".to_owned())
@@ -72,36 +69,33 @@ impl Http {
 
         let mut response = Response::new(socket);
 
-        let response_head = try!(response.read_head());
-        if self.options.show_response {
-          response_head.print_raw();
-        }
+        let response_head = try!(response.read_head(self.options.show_response));
 
         let destination_path = Path::new(&file_name);
         let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
         result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
-      };
-
-      fn connect(url: &Url) -> Result<TcpStream> {
-        fn default_port(url: &Url) -> result::Result<u16, ()> {
-          match url.scheme() {
-            "http" => Ok(80),
-            _ => Err(()),
-          }
-        }
-
-        let socket = url.with_default_port(default_port).and_then(TcpStream::connect);
-
-        str_err!(socket)
       }
+  }
 
-      fn file_name_from_url(url: &Url) -> String {
-        url.path_segments()
-          .and_then(|segments| segments.last())
-          .map(|s| s.to_string())
-          .and_then(|s| if s.is_empty() { None } else { Some(s) })
-          .unwrap_or(DEFAULT_FILE_NAME.to_string())
+  fn connect(url: &Url) -> Result<TcpStream> {
+    fn default_port(url: &Url) -> result::Result<u16, ()> {
+      match url.scheme() {
+        "http" => Ok(80),
+        _ => Err(()),
       }
+    }
+
+    let socket = url.with_default_port(default_port).and_then(TcpStream::connect);
+
+    str_err!(socket)
+  }
+
+  fn file_name_from_url(url: &Url) -> String {
+    url.path_segments()
+      .and_then(|segments| segments.last())
+      .map(|s| s.to_string())
+      .and_then(|s| if s.is_empty() { None } else { Some(s) })
+      .unwrap_or(DEFAULT_FILE_NAME.to_string())
   }
 
   fn dowload_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> Result<()>
