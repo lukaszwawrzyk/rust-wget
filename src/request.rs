@@ -15,17 +15,17 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn default(url: &Url, options: &Options) -> Result<Request> {
-    Self::build(url, options, HashMap::new())
+  pub fn send_default(socket: &mut TcpStream, url: &Url, options: &Options) -> Result<()> {
+    Self::build_and_send(socket, url, options, HashMap::new())
   }
 
-  pub fn with_range_from(url: &Url, options: &Options, range_from: u64) -> Result<Request> {
+  pub fn send_with_range_from(socket: &mut TcpStream, url: &Url, options: &Options, range_from: u64) -> Result<()> {
     let mut headers = HashMap::new();
     headers.insert("Range".to_string(), format!("bytes={}-", range_from).to_string());
-    Self::build(url, options, headers)
+    Self::build_and_send(socket, url, options, headers)
   }
 
-  fn build(url: &Url, options: &Options, special_headers: HashMap<String, String>) -> Result<Request> {
+  fn build_and_send(socket: &mut TcpStream, url: &Url, options: &Options, special_headers: HashMap<String, String>) -> Result<()> {
     let head_line = format!("GET {} HTTP/1.1", url.path()).to_string();
 
     let mut headers: HashMap<String, String> = HashMap::new();
@@ -52,7 +52,8 @@ impl Request {
       headers.insert(k, v);
     }
 
-    Ok(Self::format_request(head_line, headers))
+    let request = Self::format_request(head_line, headers);
+    request.send(socket)
   }
 
   fn format_request(head_line: String, headers: HashMap<String, String>) -> Request {

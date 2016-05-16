@@ -1,15 +1,16 @@
 use options::Options;
 use common::Result;
 use std::path::{Path, PathBuf};
-use response::Response;
+use response::{Response, ResponseHead};
 use request::Request;
 use std::net::TcpStream;
 use url::Url;
 use std::fs;
 use std::result;
 use std::io;
+use std::io::Write;
 use progress::Progress;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 
 pub struct Http {
     options: Options,
@@ -33,36 +34,53 @@ impl Http {
       let mut socket = try!(connect(url));
 
       let basic_file_name = file_name_from_url(url);
-      let file_name = try!(self.backup_file_name(&basic_file_name));
-      let destination_path = Path::new(&file_name);
 
-      let request = try!(Request::default(url, &self.options));
-      try!(request.send(&mut socket));
+// TODO continue ++++++ on progress bar
+// TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
-      let mut response = Response::new(socket);
+      let file_metadata = fs::metadata(Path::new(&basic_file_name));
+      return if self.options.continue_download && file_metadata.is_ok() {
+        let file_size = file_metadata.unwrap().len();
 
-      let response_head = try!(response.read_head());
-      if self.options.show_response {
-        response_head.print_raw();
-      }
+        try!(Request::send_with_range_from(&mut socket, url, &self.options, file_size));
 
-      let result = match response_head.content_length() {
-        Some(content_length) => {
-          let mut destination = try_str!(File::create(destination_path));
-          progress.chunk_start(content_length);
-          response.read_fixed_bytes(content_length, &mut destination, &mut progress)
-        },
-        None =>
-          if response_head.is_chunked() {
-            let mut destination = try_str!(File::create(destination_path));
-            response.read_chunked(&mut destination, &mut progress)
-          } else {
-            Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
-          },
+        let mut response = Response::new(socket);
+
+        let response_head = try!(response.read_head());
+        if self.options.show_response {
+          response_head.print_raw();
+        }
+
+        if response_head.status_code == 416 {
+          Ok("File is already fully downloaded. Nothing to do.".to_owned())
+        } else if response_head.status_code == 206 {
+          let destination_path = Path::new(&basic_file_name);
+          let result = Self::dowload_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), &mut progress);
+          result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
+        } else if response_head.status_code == 200 {
+          let file_name = try!(self.backup_file_name(&basic_file_name));
+          let destination_path = Path::new(&file_name);
+          let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
+          result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
+        } else {
+          Err(format!("Invalid status code: {}", response_head.status_code).to_string())
+        }
+      } else {
+        let file_name = try!(self.backup_file_name(&basic_file_name));
+
+        try!(Request::send_default(&mut socket, url, &self.options));
+
+        let mut response = Response::new(socket);
+
+        let response_head = try!(response.read_head());
+        if self.options.show_response {
+          response_head.print_raw();
+        }
+
+        let destination_path = Path::new(&file_name);
+        let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
+        result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
       };
-
-      return result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string());
-
 
       fn connect(url: &Url) -> Result<TcpStream> {
         fn default_port(url: &Url) -> result::Result<u16, ()> {
@@ -84,6 +102,25 @@ impl Http {
           .and_then(|s| if s.is_empty() { None } else { Some(s) })
           .unwrap_or(DEFAULT_FILE_NAME.to_string())
       }
+  }
+
+  fn dowload_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> Result<()>
+  where F: Fn() -> io::Result<W> {
+    match response_head.content_length() {
+      Some(content_length) => {
+        let mut destination = try_str!(write_supplier());
+        progress.chunk_start(content_length);
+        response.read_fixed_bytes(content_length, &mut destination, progress)
+      },
+      None => {
+        if response_head.is_chunked() {
+          let mut destination = try_str!(write_supplier());
+          response.read_chunked(&mut destination, progress)
+        } else {
+          Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
+        }
+      },
+    }
   }
 
   fn backup_file_name(&self, basic_name: &str) -> Result<String> {
