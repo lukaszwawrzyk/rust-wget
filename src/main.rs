@@ -38,6 +38,8 @@ fn main() {
 // TODO follow redirects
 // TODO show progress in %, kb of all, speed
 // TODO check status code to see if should look for eof or abort
+// TODO continue ++++++ on progress bar
+// TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
 /*
 -t number
@@ -45,47 +47,7 @@ fn main() {
     Set number of tries to number. Specify 0 or inf for infinite retrying.  The default is to retry
     20 times, with the exception of fatal errors like "connection refused" or "not found" (404),
     which are not retried.
--c
---continue
-    Continue getting a partially-downloaded file.  This is useful when you want to finish up a
-    download started by a previous instance of Wget, or by another program.  For instance:
 
-            wget -c ftp://sunsite.doc.ic.ac.uk/ls-lR.Z
-
-    If there is a file named ls-lR.Z in the current directory, Wget will assume that it is the first
-    portion of the remote file, and will ask the server to continue the retrieval from an offset
-    equal to the length of the local file.
-
-    Note that you don't need to specify this option if you just want the current invocation of Wget
-    to retry downloading a file should the connection be lost midway through.  This is the default
-    behavior.  -c only affects resumption of downloads started prior to this invocation of Wget, and
-    whose local files are still sitting around.
-
-    Without -c, the previous example would just download the remote file to ls-lR.Z.1, leaving the
-    truncated ls-lR.Z file alone.
-
-    Beginning with Wget 1.7, if you use -c on a non-empty file, and it turns out that the server
-     does not support continued downloading, Wget will refuse to start the download from scratch,
-     which would effectively ruin existing contents.  If you really want the download to start from
-     scratch, remove the file.
-
-     Also beginning with Wget 1.7, if you use -c on a file which is of equal size as the one on the
-     server, Wget will refuse to download the file and print an explanatory message.  The same
-     happens when the file is smaller on the server than locally (presumably because it was changed
-     on the server since your last download attempt)---because "continuing" is not meaningful, no
-     download occurs.
-
-     On the other side of the coin, while using -c, any file that's bigger on the server than locally
-     will be considered an incomplete download and only "(length(remote) - length(local))" bytes will
-     be downloaded and tacked onto the end of the local file.  This behavior can be desirable in
-     certain cases---for instance, you can use wget -c to download just the new portion that's been
-     appended to a data collection or log file.
-
-     However, if the file is bigger on the server because it's been changed, as opposed to just
-     appended to, you'll end up with a garbled file.  Wget has no way of verifying that the local
-     file is really a valid prefix of the remote file.  You need to be especially careful of this
-     when using -c in conjunction with -r, since every file will be considered as an "incomplete
-     download" candidate.
 
 -T seconds
 --timeout=seconds
