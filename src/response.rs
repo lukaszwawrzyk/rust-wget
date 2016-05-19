@@ -1,4 +1,4 @@
-use common::Result;
+use common::{CompoundResult, CompoundError};
 use common;
 use std::io;
 use std::io::{BufReader, Read, Write, BufRead};
@@ -36,9 +36,11 @@ impl Response {
     }
   }
 
-  pub fn read_chunked(&mut self, destination: &mut Write, progress: &mut Progress) -> Result<()> {
+  pub fn read_chunked(&mut self, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
     loop {
-      let chunk_size = try!(self.read_line_r_n().and_then(|line| str_err!(u64::from_str_radix(&line, 16))));
+      let chunk_size = try!(self.read_line_r_n()
+        .and_then(|line| u64::from_str_radix(&line, 16)
+          .map_err(|_| CompoundError::BadResponse(format!("Failed to parse chunk size '{}'", line).to_string()))));
 
       progress.chunk_start(chunk_size);
 
@@ -51,22 +53,22 @@ impl Response {
     }
   }
 
-  pub fn read_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> Result<()> {
+  pub fn read_fixed_bytes(&mut self, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
     let mut total_bytes_read: u64 = 0;
     loop {
       let bytes_left = expected_length - total_bytes_read;
 
-      let bytes_read: usize = try_str!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]));
+      let bytes_read: usize = try!(self.reader.by_ref().take(bytes_left).read(&mut self.buffer[..]));
 
       if bytes_read == 0 {
         if total_bytes_read != expected_length {
-          return Err(format!("Failed to read expected number of bytes. Read {} of {}", total_bytes_read, expected_length));
+          fail!(io::Error::new(io::ErrorKind::UnexpectedEof, format!("Failed to read expected number of bytes. Read {} of {}", total_bytes_read, expected_length)).to_string());
         } else {
           return Ok(());
         }
       }
 
-      try_str!(destination.write_all(&self.buffer[0..bytes_read]));
+      try!(destination.write_all(&self.buffer[0..bytes_read]));
 
       progress.update(bytes_read as u64);
 
@@ -78,7 +80,7 @@ impl Response {
     }
   }
 
-  pub fn read_head(&mut self, print_raw_head: bool) -> Result<ResponseHead> {
+  pub fn read_head(&mut self, print_raw_head: bool) -> CompoundResult<ResponseHead> {
     self.read_raw_head().and_then(|raw_head| {
 
       if print_raw_head {
@@ -96,31 +98,31 @@ impl Response {
               headers: headers,
             }
           }),
-        _ => Err("Invalid response format".to_owned()),
+        _ => Err(CompoundError::BadResponse("Empty response".to_string())),
       }
     })
   }
 
-  fn get_status_code(line: &String) -> Result<u16> {
+  fn get_status_code(line: &String) -> CompoundResult<u16> {
     line.split_whitespace().nth(1)
-      .ok_or(format!("Bad response: no status code found in {}", line).to_owned())
+      .ok_or(CompoundError::BadResponse(format!("No status code found in {}", line).to_owned()))
       .and_then(|code| code.parse::<u16>()
-        .map_err(|_| format!("Bad response - invalid status code {}", code).to_owned()))
+        .map_err(|_| CompoundError::BadResponse(format!("Invalid status code {}", code).to_owned())))
   }
 
-  fn read_raw_head(&mut self) -> Result<Vec<String>> {
+  fn read_raw_head(&mut self) -> CompoundResult<Vec<String>> {
     let headers: io::Result<Vec<String>> = self.reader.by_ref().lines()
       .take_while(|res| match *res {
         Ok(ref line) if !line.is_empty() => true,
         _ => false
       }).collect();
 
-    str_err!(headers)
+    Ok(try!(headers))
   }
 
-  fn read_line_r_n(&mut self) -> Result<String> {
+  fn read_line_r_n(&mut self) -> CompoundResult<String> {
     let mut line = String::new();
-    try_str!(self.reader.read_line(&mut line));
+    try!(self.reader.read_line(&mut line));
 
     if line.ends_with("\r\n") {
       let len = line.len();
@@ -130,12 +132,12 @@ impl Response {
     Ok(line)
   }
 
-  fn eat_r_n(&mut self) -> Result<()> {
+  fn eat_r_n(&mut self) -> CompoundResult<()> {
     let line = try!(self.read_line_r_n());
     if line.is_empty() {
       Ok(())
     } else {
-      Err(format!("Expected empty line, found {}", line).to_owned())
+      Err(CompoundError::BadResponse(format!("Expected empty line, found {}", line).to_owned()))
     }
   }
 }

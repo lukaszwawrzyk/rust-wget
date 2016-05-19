@@ -1,6 +1,6 @@
 extern crate url;
 
-use common::Result;
+use common::{CompoundResult, CompoundError};
 use std::net::TcpStream;
 use url::Url;
 use std::io::Write;
@@ -15,23 +15,23 @@ pub struct Request {
 }
 
 impl Request {
-  pub fn send_default(socket: &mut TcpStream, url: &Url, options: &Options) -> Result<()> {
+  pub fn send_default(socket: &mut TcpStream, url: &Url, options: &Options) -> CompoundResult<()> {
     Self::build_and_send(socket, url, options, HashMap::new())
   }
 
-  pub fn send_with_range_from(socket: &mut TcpStream, url: &Url, options: &Options, range_from: u64) -> Result<()> {
+  pub fn send_with_range_from(socket: &mut TcpStream, url: &Url, options: &Options, range_from: u64) -> CompoundResult<()> {
     let mut headers = HashMap::new();
     headers.insert("Range".to_string(), format!("bytes={}-", range_from).to_string());
     Self::build_and_send(socket, url, options, headers)
   }
 
-  fn build_and_send(socket: &mut TcpStream, url: &Url, options: &Options, special_headers: HashMap<String, String>) -> Result<()> {
+  fn build_and_send(socket: &mut TcpStream, url: &Url, options: &Options, special_headers: HashMap<String, String>) -> CompoundResult<()> {
     let head_line = format!("GET {} HTTP/1.1", url.path()).to_string();
 
     let mut headers: HashMap<String, String> = HashMap::new();
 
     // basic headers
-    let host = try!(url.host_str().ok_or("No host found in url".to_owned()));
+    let host = try!(url.host_str().ok_or(CompoundError::UserError("No host found in url".to_owned())));
     headers.insert("Host".to_string(), host.to_string());
     headers.insert("Accept".to_string(), "*/*".to_string());
 
@@ -79,8 +79,10 @@ impl Request {
     format!("Basic {}", as_base64).to_string()
   }
 
-  pub fn send(&self, socket: &mut TcpStream) -> Result<()> {
+  pub fn send(&self, socket: &mut TcpStream) -> CompoundResult<()> {
     let bytes = self.content.as_bytes();
-    str_err!(socket.write(bytes).map(|_| ()))
+    try!(socket.write(bytes));
+
+    Ok(())
   }
 }

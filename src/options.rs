@@ -1,9 +1,10 @@
 use getopts::ParsingStyle;
 use url::Url;
-use common::Result;
+use common::{CompoundResult, CompoundError};
 use rpassword;
 use getopts;
 use std::io;
+use std::io::Write;
 
 pub struct Options {
   pub continue_download: bool,
@@ -31,18 +32,18 @@ impl Credentials {
 }
 
 impl Options {
-  pub fn retreive(raw_params: Vec<String>) -> Result<Options> {
+  pub fn retreive(raw_params: Vec<String>) -> CompoundResult<Options> {
     let program = raw_params[0].clone();
     let options_parser = Self::config_parser();
 
     let parsed_opts = match options_parser.parse(&raw_params[1..]) {
       Ok(matches) => matches,
-      Err(_) => return Err(Self::usage(&program, options_parser)),
+      Err(_) => fail!(CompoundError::UserError(Self::usage(&program, options_parser))),
     };
 
     // show help
     if parsed_opts.opt_present("h") {
-      return Err(Self::usage(&program, options_parser));
+      fail!(CompoundError::UserError(Self::usage(&program, options_parser)));
     }
 
     let mut options = Self::default_options();
@@ -80,34 +81,37 @@ impl Options {
     options.credentials = match (parsed_opts.opt_str("user"), parsed_opts.opt_str("password"), parsed_opts.opt_present("ask-password")) {
       (Some(login), Some(password), false) => Some(Credentials::new(login, password)),
       (Some(login), None, true) => {
-        let password = try_str!(Self::read_password_from_user());
+        let password = try!(Self::read_password_from_user());
         Some(Credentials::new(login, password))
       },
       (Some(login), None, false) => Some(Credentials::new(login, "".to_string())),
       (None, Some(password), false) => Some(Credentials::new("".to_string(), password)),
       (None, None, true) => {
-        let password = try_str!(Self::read_password_from_user());
+        let password = try!(Self::read_password_from_user());
         Some(Credentials::new("".to_string(), password))
       },
       (None, None, false) => None,
-      _ => return Err(Self::usage(&program, options_parser)),
+      _ => fail!(CompoundError::UserError(Self::usage(&program, options_parser))),
     };
 
     // headers
     options.headers = parsed_opts.opt_strs("header");
 
     // urls
-    let urls_res: Result<Vec<Url>> = parsed_opts.free.into_iter().map(|ref url_str| str_err!(Url::parse(url_str))).collect();
-    match urls_res {
-      Ok(urls) => if urls.is_empty() {
-        return Err(Self::usage(&program, options_parser));
-      } else {
-        options.urls = urls;
-      },
-      Err(url_err) => return Err(format!("Invalid url: {}", url_err).to_string()),
-    };
+    let urls_res: CompoundResult<Vec<Url>> = parsed_opts.free.into_iter()
+      .map(|ref url_str| Url::parse(url_str)
+        .map_err(|_| CompoundError::UserError(format!("Invalid url {}", url_str).to_string())))
+      .collect();
 
-    return Ok(options);
+    let urls = try!(urls_res);
+
+    if urls.is_empty() {
+      fail!(CompoundError::UserError(Self::usage(&program, options_parser)));
+    } else {
+      options.urls = urls;
+    }
+
+    Ok(options)
   }
 
   fn default_options() -> Options {
@@ -123,9 +127,10 @@ impl Options {
     }
   }
 
-  fn read_password_from_user() -> io::Result<String> {
+  fn read_password_from_user() -> CompoundResult<String> {
     print!("Password: ");
-    return rpassword::read_password();
+    let _ = io::stdout().flush();
+    Ok(try!(rpassword::read_password()))
   }
 
   fn config_parser() -> getopts::Options {

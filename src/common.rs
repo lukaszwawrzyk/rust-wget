@@ -1,21 +1,82 @@
 use std::result;
 use std::collections::HashMap;
+use std::io;
+use std::io::ErrorKind::*;
+use std::convert;
+use std::fmt;
+use std::error::Error;
 
-pub type Result<T> = result::Result<T, String>;
+pub type CompoundResult<T> = result::Result<T, CompoundError>;
 
-#[macro_export]
-macro_rules! str_err {
-  ($e:expr) => {
-    $e.map_err(|err| err.to_string());
-  };
+#[derive(Debug)]
+pub enum CompoundError {
+  UserError(String),
+  BadResponse(String),
+  UnsupportedResponse,
+  ConnectionError(io::Error),
+  IoError(io::Error),
+  OtherError(String),
+}
+
+impl Error for CompoundError {
+    fn description(&self) -> &str {
+      match *self {
+          CompoundError::UnsupportedResponse => "unsupported response",
+          CompoundError::UserError(_) => "user error",
+          CompoundError::BadResponse(_) => "bad response",
+          CompoundError::ConnectionError(_) => "connection error",
+          CompoundError::IoError(_) => "io error",
+          CompoundError::OtherError(_) => "other error",
+      }
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            CompoundError::ConnectionError(ref err) => Some(err as &Error),
+            CompoundError::IoError(ref err) => Some(err as &Error),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for CompoundError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let desc = match *self {
+            CompoundError::UnsupportedResponse => "Unsupported response. Supported response must be either chunked or have Content-Length".to_string(),
+            CompoundError::UserError(ref msg) => format!("User error: {}", msg).to_string(),
+            CompoundError::BadResponse(ref msg) => format!("Bad response: {}", msg).to_string(),
+            CompoundError::ConnectionError(ref err) => format!("Connection error: {}", err.to_string()).to_string(),
+            CompoundError::IoError(ref err) => format!("IO Error: {}", err.to_string()).to_string(),
+            CompoundError::OtherError(ref msg) => format!("Error: {}", msg).to_string(),
+        };
+        write!(f, "{}", desc)
+    }
+}
+
+impl convert::From<io::Error> for CompoundError {
+    fn from(err: io::Error) -> CompoundError {
+        match err.kind() {
+          ConnectionRefused | ConnectionReset | ConnectionAborted | NotConnected | AddrInUse | AddrNotAvailable | TimedOut | Interrupted =>
+            CompoundError::ConnectionError(err),
+          _ =>
+            CompoundError::IoError(err),
+        }
+    }
+}
+
+impl convert::From<String> for CompoundError {
+    fn from(err: String) -> CompoundError {
+        CompoundError::OtherError(err)
+    }
 }
 
 #[macro_export]
-macro_rules! try_str {
-  ($e:expr) => {
-    try!($e.map_err(|err| err.to_string()));
-  };
+macro_rules! fail {
+  ($err:expr) => (
+    return ::std::result::Result::Err(::std::convert::From::from($err));
+  )
 }
+
 
 // TODO move it somewhere
 pub fn parse_header_lines(header_lines: &[String]) -> HashMap<String, String> {

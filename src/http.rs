@@ -1,5 +1,5 @@
 use options::Options;
-use common::Result;
+use common::{CompoundResult, CompoundError};
 use std::path::{Path, PathBuf};
 use response::{Response, ResponseHead};
 use request::Request;
@@ -11,6 +11,7 @@ use std::io;
 use std::io::Write;
 use progress::Progress;
 use std::fs::{File, OpenOptions};
+use std::time::Duration;
 
 pub struct Http {
     options: Options,
@@ -25,13 +26,13 @@ impl Http {
       }
   }
 
-  pub fn download_all(&self) -> Result<String> {
+  pub fn download_all(&self) -> CompoundResult<String> {
     self.download_one(&self.options.urls[0])
   }
 
-  fn download_one(&self, url: &Url) -> Result<String> {
+  fn download_one(&self, url: &Url) -> CompoundResult<String> {
       let mut progress = Progress::new();
-      let mut socket = try!(Self::connect(url));
+      let mut socket = try!(self.connect(url));
 
       let basic_file_name = Self::file_name_from_url(url);
 
@@ -60,7 +61,7 @@ impl Http {
           let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
           result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
         } else {
-          Err(format!("Invalid status code: {}", response_head.status_code).to_string())
+          fail!(format!("Invalid status code: {}", response_head.status_code).to_string())
         }
       } else {
         let file_name = try!(self.backup_file_name(&basic_file_name));
@@ -77,7 +78,7 @@ impl Http {
       }
   }
 
-  fn connect(url: &Url) -> Result<TcpStream> {
+  fn connect(&self, url: &Url) -> CompoundResult<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
       match url.scheme() {
         "http" => Ok(80),
@@ -85,9 +86,12 @@ impl Http {
       }
     }
 
-    let socket = url.with_default_port(default_port).and_then(TcpStream::connect);
+    let socket = try!(url.with_default_port(default_port).and_then(TcpStream::connect));
+    let timeout = self.options.timeout_secs.map(Duration::from_secs);
+    try!(socket.set_read_timeout(timeout));
+    try!(socket.set_write_timeout(timeout));
 
-    str_err!(socket)
+    Ok(socket)
   }
 
   fn file_name_from_url(url: &Url) -> String {
@@ -98,27 +102,27 @@ impl Http {
       .unwrap_or(DEFAULT_FILE_NAME.to_string())
   }
 
-  fn dowload_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> Result<()>
+  fn dowload_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> CompoundResult<()>
   where F: Fn() -> io::Result<W> {
     match response_head.content_length() {
       Some(content_length) => {
-        let mut destination = try_str!(write_supplier());
+        let mut destination = try!(write_supplier());
         progress.chunk_start(content_length);
         response.read_fixed_bytes(content_length, &mut destination, progress)
       },
       None => {
         if response_head.is_chunked() {
-          let mut destination = try_str!(write_supplier());
+          let mut destination = try!(write_supplier());
           response.read_chunked(&mut destination, progress)
         } else {
-          Err("Unsupported response. Supported response must be either chunked or have Content-Length".to_owned())
+          fail!(CompoundError::UnsupportedResponse)
         }
       },
     }
   }
 
-  fn backup_file_name(&self, basic_name: &str) -> Result<String> {
-    let dir = try_str!(fs::read_dir(Path::new("./")));
+  fn backup_file_name(&self, basic_name: &str) -> CompoundResult<String> {
+    let dir = try!(fs::read_dir(Path::new("./")));
     let files: Vec<String> = dir
       .flat_map(|r| r.ok())
       .flat_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
@@ -152,7 +156,7 @@ impl Http {
         match missing_index {
           Some(next_index) => Ok(format!("{}.{}", basic_name, next_index).to_string()),
           None => {
-            try_str!(Self::shift_names(basic_name, limit));
+            try!(Self::shift_names(basic_name, limit));
             Ok(basic_name.to_string())
           },
         }
