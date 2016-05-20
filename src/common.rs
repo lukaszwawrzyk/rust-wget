@@ -11,8 +11,10 @@ pub type CompoundResult<T> = result::Result<T, CompoundError>;
 #[derive(Debug)]
 pub enum CompoundError {
   UserError(String),
+  TemporaryServerError,
   BadResponse(String),
   UnsupportedResponse,
+  ServerDoesNotSupportContinuation,
   ConnectionError(io::Error),
   IoError(io::Error),
   OtherError(String),
@@ -21,7 +23,9 @@ pub enum CompoundError {
 impl Error for CompoundError {
     fn description(&self) -> &str {
       match *self {
+          CompoundError::TemporaryServerError => "temporary server error",
           CompoundError::UnsupportedResponse => "unsupported response",
+          CompoundError::ServerDoesNotSupportContinuation => "server does not support range header",
           CompoundError::UserError(_) => "user error",
           CompoundError::BadResponse(_) => "bad response",
           CompoundError::ConnectionError(_) => "connection error",
@@ -42,7 +46,9 @@ impl Error for CompoundError {
 impl fmt::Display for CompoundError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let desc = match *self {
+            CompoundError::TemporaryServerError => "Temporary server error (5xx)".to_string(),
             CompoundError::UnsupportedResponse => "Unsupported response. Supported response must be either chunked or have Content-Length".to_string(),
+            CompoundError::ServerDoesNotSupportContinuation => "Server does not support range header".to_string(),
             CompoundError::UserError(ref msg) => format!("User error: {}", msg).to_string(),
             CompoundError::BadResponse(ref msg) => format!("Bad response: {}", msg).to_string(),
             CompoundError::ConnectionError(ref err) => format!("Connection error: {}", err.to_string()).to_string(),

@@ -13,6 +13,12 @@ use progress::Progress;
 use std::fs::{File, OpenOptions};
 use std::time::Duration;
 
+enum Status {
+  AlreadyDownloaded,
+  Success(Path),
+  Redirect(Url),
+}
+
 pub struct Http {
     options: Options,
 }
@@ -32,51 +38,90 @@ impl Http {
 
   fn download_one(&self, url: &Url) -> CompoundResult<String> {
       let mut progress = Progress::new();
-      let mut socket = try!(self.connect(url));
+      let destination_path = self.get_destination_path(url);
 
-      let basic_file_name = Self::file_name_from_url(url);
 
-// TODO continue ++++++ on progress bar
-// TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
-      let file_metadata = fs::metadata(Path::new(&basic_file_name));
-      if self.options.continue_download && file_metadata.is_ok() {
-        let file_size = file_metadata.unwrap().len();
+  }
 
-        try!(Request::send_with_range_from(&mut socket, url, &self.options, file_size));
+  fn try_download_one(&self, destination_path: &Path, progress: &Progress, url: &Url) -> CompoundResult<Status> {
+    let mut socket = try!(self.connect(url));
 
-        let mut response = Response::new(socket);
+    if Self::file_exists(destination_path) {
+      try!(Request::send_with_range_from(&mut socket, url, &self.options, try!(file_size(destination_path))));
 
-        let response_head = try!(response.read_head(self.options.show_response));
+      let mut response = Response::new(socket);
+      let response_head = try!(response.read_head(self.options.show_response));
 
-        if response_head.status_code == 416 {
-          Ok("File is already fully downloaded. Nothing to do.".to_owned())
-        } else if response_head.status_code == 206 {
-          let destination_path = Path::new(&basic_file_name);
-          let result = Self::dowload_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), &mut progress);
-          result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
-        } else if response_head.status_code == 200 {
-          let file_name = try!(self.backup_file_name(&basic_file_name));
-          let destination_path = Path::new(&file_name);
-          let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
-          result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
+      return match response_head.status_code {
+        416 => Ok(Status::AlreadyDownloaded)),
+        206 => Self::dowload_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), &mut progress),
+        200 => if !self.options.continue_download {
+          Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
         } else {
-          fail!(format!("Invalid status code: {}", response_head.status_code).to_string())
-        }
-      } else {
-        let file_name = try!(self.backup_file_name(&basic_file_name));
-
+          fail!(CompoundError::ServerDoesNotSupportContinuation);
+        },
+        other => handle_errors_and_redirects(other, &response_head),
+      }
+    } else {
         try!(Request::send_default(&mut socket, url, &self.options));
 
         let mut response = Response::new(socket);
-
         let response_head = try!(response.read_head(self.options.show_response));
 
-        let destination_path = Path::new(&file_name);
-        let result = Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
-        result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
+        match response_head.status_code {
+          200 => Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress),
+          other => handle_errors_and_redirects(other, &response_head),
+        }
+    };
+
+    fn handle_errors_and_redirects(response_status: u16, response_head: &ResponseHead) -> CompoundResult<Status> {
+      match response_status {
+        301 | 302 | 303 | 307 | 308  => {
+          let redirect_url = try!(response_head.location().unwrap_or(CompoundError::BadResponse("Redirect response contains no Location header")));
+          Ok(Status::Redirect(redirect_url))
+        },
+        status @ 400 ... 499 => fail!(CompoundError::BadResponse(format!("Status code {}", status).to_string())),
+        500 ... 511 => fail!(CompoundError::TemporaryServerError),
+        other => fail!(CompoundError::BadResponse(format!("Unknown status code {}", other).to_string())),
       }
+    }
   }
+
+  fn file_exists(path: &Path) -> bool {
+    fs::metadata(path).is_ok()
+  }
+
+  fn file_size(path: &Path) -> CompoundResult<u64> {
+    try!(fs::metadata(path).map(Metadata::len))
+  }
+
+  fn get_destination_path(&self, url: &Url) -> Path {
+    let basic_file_name = Self::file_name_from_url(url);
+    let destination_path = if self.should_continue_download(&basic_file_name) {
+      Path::new(&basic_file_name)
+    } else {
+      Path::new(try!(self.backup_file_name(&basic_file_name)))
+    }
+  }
+
+  fn file_name_from_url(url: &Url) -> String {
+    url.path_segments()
+      .and_then(|segments| segments.last())
+      .map(|s| s.to_string())
+      .and_then(|s| if s.is_empty() { None } else { Some(s) })
+      .unwrap_or(DEFAULT_FILE_NAME.to_string())
+  }
+
+  fn should_continue_download(&self, file_name: &str) -> bool {
+    let file_metadata = fs::metadata(Path::new(file_name));
+
+    self.options.continue_download && file_metadata.is_ok()
+  }
+
+/////////////////////////////////////////////////////////////////////
+        result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
+
 
   fn connect(&self, url: &Url) -> CompoundResult<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
@@ -92,14 +137,6 @@ impl Http {
     try!(socket.set_write_timeout(timeout));
 
     Ok(socket)
-  }
-
-  fn file_name_from_url(url: &Url) -> String {
-    url.path_segments()
-      .and_then(|segments| segments.last())
-      .map(|s| s.to_string())
-      .and_then(|s| if s.is_empty() { None } else { Some(s) })
-      .unwrap_or(DEFAULT_FILE_NAME.to_string())
   }
 
   fn dowload_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> CompoundResult<()>

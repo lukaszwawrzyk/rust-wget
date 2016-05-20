@@ -19,6 +19,10 @@ impl ResponseHead {
   pub fn is_chunked(&self) -> bool {
     self.headers.get("Transfer-Encoding").map_or(false, |encoding| encoding == "chunked")
   }
+
+  pub fn location(&self) -> Option<Url> {
+    self.headers.get("Location").and_then(|url| Url::parse(url).ok())
+  }
 }
 
 const BUFFER_SIZE: usize = 16 * 1024;
