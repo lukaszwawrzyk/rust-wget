@@ -35,10 +35,7 @@ fn main() {
 }
 
 // TODO check https
-// TODO follow redirects
 // TODO show progress in %, kb of all, speed
-// TODO check status code to see if should look for eof or abort
-// TODO continue ++++++ on progress bar
 // TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
 /*

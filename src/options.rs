@@ -151,7 +151,7 @@ impl Options {
   }
 
   fn usage(program: &str, opts: getopts::Options) -> String {
-      let brief = format!("Usage: {} [options] URL", program);
-      return opts.usage(&brief).to_string();
+    let brief = format!("Usage: {} [options] URL", program);
+    return opts.usage(&brief).to_string();
   }
 }

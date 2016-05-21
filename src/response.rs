@@ -5,6 +5,7 @@ use std::io::{BufReader, Read, Write, BufRead};
 use std::net::TcpStream;
 use std::collections::HashMap;
 use progress::Progress;
+use url::Url;
 
 pub struct ResponseHead {
   pub status_code: u16,
@@ -43,8 +44,8 @@ impl Response {
   pub fn read_chunked(&mut self, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
     loop {
       let chunk_size = try!(self.read_line_r_n()
-        .and_then(|line| u64::from_str_radix(&line, 16)
-          .map_err(|_| CompoundError::BadResponse(format!("Failed to parse chunk size '{}'", line).to_string()))));
+      .and_then(|line| u64::from_str_radix(&line, 16)
+      .map_err(|_| CompoundError::BadResponse(format!("Failed to parse chunk size '{}'", line).to_string()))));
 
       try!(self.read_fixed_bytes(chunk_size, destination, progress));
       try!(self.eat_r_n());
@@ -93,13 +94,13 @@ impl Response {
 
       match &raw_head[..] {
         [ref status_line, raw_headers..] =>
-          Self::get_status_code(&status_line).map(|code| {
-            let headers = common::parse_header_lines(raw_headers);
-            ResponseHead {
-              status_code: code,
-              headers: headers,
-            }
-          }),
+        Self::get_status_code(&status_line).map(|code| {
+          let headers = common::parse_header_lines(raw_headers);
+          ResponseHead {
+            status_code: code,
+            headers: headers,
+          }
+        }),
         _ => Err(CompoundError::BadResponse("Empty response".to_string())),
       }
     })
@@ -107,17 +108,17 @@ impl Response {
 
   fn get_status_code(line: &String) -> CompoundResult<u16> {
     line.split_whitespace().nth(1)
-      .ok_or(CompoundError::BadResponse(format!("No status code found in {}", line).to_owned()))
-      .and_then(|code| code.parse::<u16>()
-        .map_err(|_| CompoundError::BadResponse(format!("Invalid status code {}", code).to_owned())))
+    .ok_or(CompoundError::BadResponse(format!("No status code found in {}", line).to_owned()))
+    .and_then(|code| code.parse::<u16>()
+    .map_err(|_| CompoundError::BadResponse(format!("Invalid status code {}", code).to_owned())))
   }
 
   fn read_raw_head(&mut self) -> CompoundResult<Vec<String>> {
     let headers: io::Result<Vec<String>> = self.reader.by_ref().lines()
-      .take_while(|res| match *res {
-        Ok(ref line) if !line.is_empty() => true,
-        _ => false
-      }).collect();
+    .take_while(|res| match *res {
+      Ok(ref line) if !line.is_empty() => true,
+      _ => false
+    }).collect();
 
     Ok(try!(headers))
   }
