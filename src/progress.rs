@@ -48,7 +48,7 @@ pub struct Progress {
   steps: Vec<Step>,
   total_size: Option<u64>,
   predownloaded_size: Option<u64>,
-  last_update: u64,
+  last_update: Option<u64>,
   initialized: bool,
 }
 
@@ -60,7 +60,7 @@ impl Progress {
       steps: Vec::new(),
       total_size: None,
       predownloaded_size: None,
-      last_update: 0,
+      last_update: None,
       initialized: false,
     }
   }
@@ -94,14 +94,14 @@ impl Progress {
 
   pub fn update(&mut self, bytes_read: u64) -> () {
     let now = precise_time_ns();
-    let duration = now - self.last_update;
+    let duration = now - self.last_update.unwrap_or(now);
 
     self.steps.push(Step {
       duration_ns: duration,
       bytes_read: bytes_read,
     });
 
-    self.last_update = now;
+    self.last_update = Some(now);
 
     self.show_status();
   }
@@ -116,7 +116,7 @@ impl Progress {
         let bytes_left = bytes_total - bytes_read - self.predownloaded_size.unwrap_or(0);
 
         let new_progress_percent: f32 = 100f32 * safe_div_f32!(bytes_read as f32, bytes_total as f32);
-
+        let overall_progress_percent: f32 = 100f32 * safe_div_f32!(bytes_read as f32 + self.predownloaded_size.unwrap_or(0) as f32, bytes_total as f32);
         let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
 
         let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
@@ -126,7 +126,14 @@ impl Progress {
 
         let status_bar_str = self.progress_bar(new_progress_percent);
 
-        print!("\r[{}] {}/{} bytes ({}%) {}B/s elapsed: {} left: {}", status_bar_str, bytes_read + self.predownloaded_size.unwrap_or(0), bytes_total, new_progress_percent, bytes_per_sec, time_elapsed, time_left);
+        print!("\r[{}] {: >8} of {: <8} {: >5.1}% {: >8}/s elapsed: {} left: {}",
+          status_bar_str,
+          Self::human_readable_bytes(bytes_read + self.predownloaded_size.unwrap_or(0)),
+          Self::human_readable_bytes(bytes_total),
+          overall_progress_percent,
+          Self::human_readable_bytes(bytes_per_sec),
+          Self::human_readable_duration(&time_elapsed),
+          Self::human_readable_duration(&time_left));
       },
       None => {
         let current_progress = self.steps.iter().fold(ZERO_STEP, |acc, el| &acc + el);
@@ -140,6 +147,33 @@ impl Progress {
         print!("\r[{}] {}/? bytes {}B/s elapsed: {}", status_bar_str, bytes_read, bytes_per_sec, time_elapsed);
       }
     }
+  }
+
+  fn human_readable_duration(duration: &Duration) -> String {
+    let mut seconds = duration.num_seconds();
+
+    let hours = seconds / (60 * 60);
+    seconds -= hours * 60 * 60;
+
+    let minutes = seconds / 60;
+    seconds -= minutes * 60;
+
+    format!("{:02}:{:02}:{:02}", cmp::min(99, hours), minutes, seconds).to_string()
+  }
+
+  fn human_readable_bytes(bytes: u64) -> String {
+    if bytes == 0 {
+      return "0B".to_string();
+    }
+
+    let units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    let bytes_as_float = bytes as f64;
+
+    let delimiter = 1000f64;
+    let exponent = cmp::min((bytes_as_float.ln() / delimiter.ln()).floor() as i32, (units.len() - 1) as i32);
+    let pretty_bytes = format!("{:.2}", bytes_as_float / delimiter.powi(exponent)).parse::<f64>().unwrap() * 1f64;
+    let unit = units[exponent as usize];
+    format!("{:.2}{}", pretty_bytes, unit)
   }
 
 
