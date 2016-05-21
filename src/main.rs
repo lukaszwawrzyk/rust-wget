@@ -42,28 +42,6 @@ fn main() {
 // TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
 
 /*
--t number
---tries=number
-    Set number of tries to number. Specify 0 or inf for infinite retrying.  The default is to retry
-    20 times, with the exception of fatal errors like "connection refused" or "not found" (404),
-    which are not retried.
-
-
--T seconds
---timeout=seconds
-   Set the network timeout to seconds seconds.  This is equivalent to specifying --dns-timeout,
-   --connect-timeout, and --read-timeout, all at the same time.
-
-   When interacting with the network, Wget can check for timeout and abort the operation if it
-   takes too long.  This prevents anomalies like hanging reads and infinite connects.  The only
-   timeout enabled by default is a 900-second read timeout.  Setting a timeout to 0 disables it
-   altogether.  Unless you know what you are doing, it is best not to change the default timeout
-   settings.
-
-   All timeout-related options accept decimal values, as well as subsecond values.  For example,
-   0.1 seconds is a legal (though unwise) choice of timeout.  Subsecond timeouts are useful for
-   checking server response times or for testing network latency.
-
 HTTPS
 
 logi:

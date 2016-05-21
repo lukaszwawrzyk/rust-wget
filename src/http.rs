@@ -36,12 +36,36 @@ impl Http {
     self.download_one(&self.options.urls[0])
   }
 
-  fn download_one(&self, url: &Url) -> CompoundResult<String> {
+  fn download_one(&self, original_url: &Url) -> CompoundResult<String> {
       let mut progress = Progress::new();
-      let destination_path = self.get_destination_path(url);
+      let mut destination_path = self.get_destination_path(url);
+      let mut url = original_url;
 
+      let tries_limited = self.options.tries.is_some();
+      let try_limit = self.options.tries.unwrap_or(0);
+      let mut tries = 0u64;
 
+      while !tries_limited || tries < try_limit {
+          match self.try_download_one(&destination_path, &progress, url) {
+              Ok(status) => match status {
+                  Status::AlreadyDownloaded => return Ok("File already downloaded, nothing to do."),
+                  Status::Success(ref path) => return Ok(format!("Downloaded to {}", path.to_string_lossy()).to_string()),
+                  Status::Redirect(ref new_url) => {
+                      url = new_url;
+                      destination_path = self.get_destination_path(url);
+                      continue;
+                  },
+              },
+              Err(error) => match error {
+                  CompoundError::ConnectionError(_) |
+                  CompoundError::TemporaryServerError =>
+                      if tries_limited { tries++ },
+                  fatal_error => fail!(fatal_error),
+              },
+          }
+      }
 
+      fail!(format!("Failed after {} tries", try_limit));
   }
 
   fn try_download_one(&self, destination_path: &Path, progress: &Progress, url: &Url) -> CompoundResult<Status> {
@@ -118,10 +142,6 @@ impl Http {
 
     self.options.continue_download && file_metadata.is_ok()
   }
-
-/////////////////////////////////////////////////////////////////////
-        result.map(|_| format!("Downloaded to {}", destination_path.to_string_lossy()).to_string())
-
 
   fn connect(&self, url: &Url) -> CompoundResult<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
