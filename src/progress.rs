@@ -126,7 +126,7 @@ impl Progress {
 
         let status_bar_str = self.progress_bar(new_progress_percent);
 
-        print!("\r[{}] {}/{} bytes ({}%) {}B/s elapsed: {} left: {}", status_bar_str, bytes_read, bytes_total, new_progress_percent, bytes_per_sec, time_elapsed, time_left);
+        print!("\r[{}] {}/{} bytes ({}%) {}B/s elapsed: {} left: {}", status_bar_str, bytes_read + self.predownloaded_size.unwrap_or(0), bytes_total, new_progress_percent, bytes_per_sec, time_elapsed, time_left);
       },
       None => {
         let current_progress = self.steps.iter().fold(ZERO_STEP, |acc, el| &acc + el);
