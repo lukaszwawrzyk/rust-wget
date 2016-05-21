@@ -46,8 +46,6 @@ impl Response {
         .and_then(|line| u64::from_str_radix(&line, 16)
           .map_err(|_| CompoundError::BadResponse(format!("Failed to parse chunk size '{}'", line).to_string()))));
 
-      progress.chunk_start(chunk_size);
-
       try!(self.read_fixed_bytes(chunk_size, destination, progress));
       try!(self.eat_r_n());
 

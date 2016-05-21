@@ -36,30 +36,29 @@ impl Http {
     self.download_one(&self.options.urls[0])
   }
 
-  fn download_one(&self, original_url: &Url) -> CompoundResult<String> {
+  fn download_one(&self, url: &Url) -> CompoundResult<String> {
       let mut progress = Progress::new();
+      self.download_one_recursive(url, progress, 0)
+  }
+
+  fn download_one_recursive(&self, url: &Url, progress: &mut Progress, initial_tries: u64) -> CompoundResult<String> {
       let mut destination_path = self.get_destination_path(url);
-      let mut url = original_url;
 
       let tries_limited = self.options.tries.is_some();
       let try_limit = self.options.tries.unwrap_or(0);
-      let mut tries = 0u64;
+      let mut tries = initial_tries;
 
       while !tries_limited || tries < try_limit {
           match self.try_download_one(&destination_path, &progress, url) {
               Ok(status) => match status {
                   Status::AlreadyDownloaded => return Ok("File already downloaded, nothing to do."),
                   Status::Success(ref path) => return Ok(format!("Downloaded to {}", path.to_string_lossy()).to_string()),
-                  Status::Redirect(ref new_url) => {
-                      url = new_url;
-                      destination_path = self.get_destination_path(url);
-                      continue;
-                  },
+                  Status::Redirect(ref new_url) => return self.download_one(new_url, progress, tries),
               },
               Err(error) => match error {
                   CompoundError::ConnectionError(_) |
                   CompoundError::TemporaryServerError =>
-                      if tries_limited { tries++ },
+                    if tries_limited { tries++ },
                   fatal_error => fail!(fatal_error),
               },
           }
@@ -72,14 +71,20 @@ impl Http {
     let mut socket = try!(self.connect(url));
 
     if Self::file_exists(destination_path) {
-      try!(Request::send_with_range_from(&mut socket, url, &self.options, try!(file_size(destination_path))));
+      let file_size = try!(file_size(destination_path));
+      try!(Request::send_with_range_from(&mut socket, url, &self.options, file_size));
 
       let mut response = Response::new(socket);
       let response_head = try!(response.read_head(self.options.show_response));
 
       return match response_head.status_code {
         416 => Ok(Status::AlreadyDownloaded)),
-        206 => Self::dowload_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), &mut progress),
+        206 => {
+            if self.options.continue_download {
+                progress.try_set_predownloaded(file_size);
+            }
+            Self::dowload_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), &mut progress)
+        },
         200 => if !self.options.continue_download {
           Self::dowload_body(response_head, response, || File::create(destination_path), &mut progress);
         } else {
@@ -164,12 +169,13 @@ impl Http {
     match response_head.content_length() {
       Some(content_length) => {
         let mut destination = try!(write_supplier());
-        progress.chunk_start(content_length);
+        progress.try_initialize_sized(content_length);
         response.read_fixed_bytes(content_length, &mut destination, progress)
       },
       None => {
         if response_head.is_chunked() {
           let mut destination = try!(write_supplier());
+          progress.try_initialize_indeterminate();
           response.read_chunked(&mut destination, progress)
         } else {
           fail!(CompoundError::UnsupportedResponse)
