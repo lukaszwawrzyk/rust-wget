@@ -24,7 +24,6 @@ pub struct Http {
   options: Options,
 }
 
-// todo test retries
 // todo test extra headers
 
 impl Http {
@@ -60,7 +59,7 @@ impl Http {
         },
         Err(error) => match error {
           CompoundError::ConnectionError(_) | CompoundError::TemporaryServerError =>
-            if tries_limited { tries += 1 },
+            if tries_limited { tries += 1; },
           fatal_error =>
             fail!(fatal_error),
         },

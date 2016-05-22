@@ -63,7 +63,7 @@ impl convert::From<hyper::error::Error> for CompoundError {
   fn from(err: hyper::error::Error) -> CompoundError {
     match err {
       hyper::error::Error::Io(e) =>
-        convert::From::from(e),
+        CompoundError::ConnectionError(e),
       hyper::error::Error::Uri(e) =>
         CompoundError::UserError(format!("Invalid url ({})", e).to_string()),
       e =>
@@ -75,7 +75,7 @@ impl convert::From<hyper::error::Error> for CompoundError {
 impl convert::From<io::Error> for CompoundError {
   fn from(err: io::Error) -> CompoundError {
     match err.kind() {
-      ConnectionRefused | ConnectionReset | ConnectionAborted | NotConnected | AddrInUse | AddrNotAvailable | TimedOut | Interrupted =>
+      ConnectionRefused | ConnectionReset | ConnectionAborted | NotConnected | AddrInUse | AddrNotAvailable | TimedOut | Interrupted | UnexpectedEof | BrokenPipe | WouldBlock =>
         CompoundError::ConnectionError(err),
       _ =>
         CompoundError::IoError(err),
