@@ -1,6 +1,6 @@
 use getopts::ParsingStyle;
 use hyper::Url;
-use common::{CompoundResult, CompoundError};
+use error::{CompoundResult, CompoundError};
 use rpassword;
 use getopts;
 use std::io;

@@ -1,4 +1,4 @@
-use common::CompoundResult;
+use error::CompoundResult;
 use std::io;
 use std::io::{Read, Write};
 use progress::Progress;

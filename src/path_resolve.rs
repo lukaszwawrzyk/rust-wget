@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use hyper::Url;
 use options::Options;
-use common::CompoundResult;
+use error::CompoundResult;
 use std::io;
 
 const DEFAULT_FILE_NAME: &'static str = "out";

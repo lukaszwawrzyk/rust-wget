@@ -8,7 +8,7 @@ extern crate rpassword;
 extern crate hyper;
 
 #[macro_use]
-mod common;
+mod error;
 mod request;
 mod response;
 mod progress;

@@ -1,6 +1,6 @@
 extern crate url;
 
-use common::CompoundResult;
+use error::CompoundResult;
 use hyper::Url;
 use options::Options;
 use hyper::header::Headers;

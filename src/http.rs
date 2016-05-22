@@ -1,5 +1,5 @@
 use options::Options;
-use common::{CompoundResult, CompoundError};
+use error::{CompoundResult, CompoundError};
 use std::path::{Path, PathBuf};
 use response::ResponseBuffer;
 use request::Request;
