@@ -24,7 +24,6 @@ pub struct Http {
   options: Options,
 }
 
-// todo fix ++ bug
 // todo slow down progress refresh
 // todo test retries
 // todo test extra headers

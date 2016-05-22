@@ -124,10 +124,10 @@ impl Progress {
         let secs_left = safe_div_u64!(bytes_left, bytes_per_sec);
         let time_left = Duration::seconds(secs_left as i64);
 
-        let status_bar_str = self.progress_bar(new_progress_percent);
+        let indeterminate_status_bar_str = self.progress_bar(new_progress_percent);
 
         print!("\r[{}] {: >8} of {: <8} {: >5.1}% {: >8}/s elapsed: {} left: {}",
-          status_bar_str,
+          indeterminate_status_bar_str,
           Self::human_readable_bytes(bytes_read + self.predownloaded_size.unwrap_or(0)),
           Self::human_readable_bytes(bytes_total),
           overall_progress_percent,
@@ -142,10 +142,10 @@ impl Progress {
         let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
         let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
 
-        let status_bar_str = self.status_bar(time_elapsed.num_seconds() as u64);
+        let indeterminate_status_bar_str = self.indeterminate_status_bar(time_elapsed.num_seconds() as u64);
 
         print!("\r[{}] {: >8} {: >8}/s elapsed: {}",
-          status_bar_str,
+          indeterminate_status_bar_str,
           Self::human_readable_bytes(bytes_read),
           Self::human_readable_bytes(bytes_per_sec),
           Self::human_readable_duration(&time_elapsed));
@@ -181,7 +181,7 @@ impl Progress {
   }
 
 
-  fn status_bar(&self, time_elapsed: u64) -> String {
+  fn indeterminate_status_bar(&self, time_elapsed: u64) -> String {
     let mut bar_buffer: [char; PROGRESS_BAR_SIZE] = [' '; PROGRESS_BAR_SIZE];
     let indicator_center_position = cmp::min(((time_elapsed as i64 % (PROGRESS_BAR_SIZE as i64 * 2)) - PROGRESS_BAR_SIZE as i64 + 1).abs() as usize, PROGRESS_BAR_SIZE - 1);
 
@@ -200,15 +200,15 @@ impl Progress {
   fn progress_bar(&self, progress_percent: f32) -> String {
     let mut bar_buffer: [char; PROGRESS_BAR_SIZE] = [' '; PROGRESS_BAR_SIZE];
     let predownloaded_percent = 100f32 * safe_div_f32!(self.predownloaded_size.unwrap_or(0) as f32, self.total_size.unwrap() as f32);
-    let last_to_fill_predownloaded: i16 = (PROGRESS_BAR_SIZE as f32 * predownloaded_percent / 100f32) as i16 - 1;
-    let last_to_fill_new_progress: i16 = (PROGRESS_BAR_SIZE as f32 * progress_percent / 100f32) as i16 - 1;
+    let last_to_fill_predownloaded: i16 = (PROGRESS_BAR_SIZE as f32 * predownloaded_percent / 100f32).ceil() as i16 - 1;
+    let last_to_fill_new_progress: i16 = (PROGRESS_BAR_SIZE as f32 * progress_percent / 100f32).floor() as i16 - 1;
 
     for i in 0..last_to_fill_predownloaded + 1 {
       bar_buffer[i as usize] = '+';
     }
 
     let (new_fill_start, new_fill_end) = if last_to_fill_predownloaded >= 0 && last_to_fill_new_progress >= 0 {
-      (last_to_fill_predownloaded, last_to_fill_predownloaded + last_to_fill_new_progress + 1)
+      (last_to_fill_predownloaded + 1, last_to_fill_predownloaded + 1 + last_to_fill_new_progress)
     } else {
       (0, last_to_fill_new_progress)
     };
