@@ -1,5 +1,4 @@
 use std::result;
-use std::collections::HashMap;
 use std::io;
 use std::io::ErrorKind::*;
 use std::convert;
@@ -95,16 +94,4 @@ macro_rules! fail {
   ($err:expr) => (
     return ::std::result::Result::Err(::std::convert::From::from($err));
   )
-}
-
-
-// TODO move it somewhere
-pub fn parse_header_lines(header_lines: &[String]) -> HashMap<String, String> {
-  header_lines.into_iter().flat_map(|line| {
-    let splitted: Vec<&str> = line.split(": ").collect();
-    match &splitted[..] {
-      [key, value] => Some((key.to_string(), value.to_string())),
-      _ => None
-    }
-  }).collect()
 }

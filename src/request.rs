@@ -3,13 +3,13 @@ extern crate url;
 use common::CompoundResult;
 use hyper::Url;
 use options::Options;
-use common;
 use hyper::header::Headers;
 use hyper::header;
 use hyper::mime;
 use hyper::client::response::Response;
 use std::time::Duration;
 use hyper::client::{Client, RedirectPolicy};
+use std::collections::HashMap;
 
 pub struct Request {
 }
@@ -40,7 +40,7 @@ impl Request {
     special_header.map(|header| headers.set(header));
 
     // headers from user that may override current
-    let extra_headers_raw = common::parse_header_lines(&options.headers[..]);
+    let extra_headers_raw = Self::parse_header_lines(&options.headers[..]);
     for (k, v) in extra_headers_raw {
       headers.set_raw(k, vec![v.into_bytes()]);
     }
@@ -58,5 +58,15 @@ impl Request {
     client.set_read_timeout(timeout);
     client.set_write_timeout(timeout);
     client
+  }
+
+  fn parse_header_lines(header_lines: &[String]) -> HashMap<String, String> {
+    header_lines.into_iter().flat_map(|line| {
+      let splitted: Vec<&str> = line.split(": ").collect();
+      match &splitted[..] {
+        [key, value] => Some((key.to_string(), value.to_string())),
+        _ => None
+      }
+    }).collect()
   }
 }
