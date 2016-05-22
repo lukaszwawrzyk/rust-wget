@@ -27,6 +27,7 @@ pub struct Http {
 // todo fix ++ bug
 // todo slow down progress refresh
 // todo test retries
+// todo test extra headers
 
 impl Http {
   pub fn new(options: Options) -> Http {

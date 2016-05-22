@@ -31,7 +31,7 @@ impl Request {
         header::Authorization(
           header::Basic {
             username: credentials.user.clone(),
-            password: Some(credentials.password.clone())
+            password: credentials.password.clone()
           }
         )
       )

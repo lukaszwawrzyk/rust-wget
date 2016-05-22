@@ -19,15 +19,12 @@ pub struct Options {
 
 pub struct Credentials {
   pub user: String,
-  pub password: String,
+  pub password: Option<String>,
 }
 
 impl Credentials {
-  pub fn new(user: String, password: String) -> Credentials {
-    Credentials {
-      user: user,
-      password: password,
-    }
+  pub fn new(user: String, password: Option<String>) -> Credentials {
+    Credentials { user: user, password: password }
   }
 }
 
@@ -79,16 +76,16 @@ impl Options {
 
     // credentials
     options.credentials = match (parsed_opts.opt_str("user"), parsed_opts.opt_str("password"), parsed_opts.opt_present("ask-password")) {
-      (Some(login), Some(password), false) => Some(Credentials::new(login, password)),
+      (Some(login), Some(password), false) => Some(Credentials::new(login, Some(password))),
       (Some(login), None, true) => {
         let password = try!(Self::read_password_from_user());
-        Some(Credentials::new(login, password))
+        Some(Credentials::new(login, Some(password)))
       },
-      (Some(login), None, false) => Some(Credentials::new(login, "".to_string())),
-      (None, Some(password), false) => Some(Credentials::new("".to_string(), password)),
+      (Some(login), None, false) => Some(Credentials::new(login, None)),
+      (None, Some(password), false) => Some(Credentials::new("".to_string(), Some(password))),
       (None, None, true) => {
         let password = try!(Self::read_password_from_user());
-        Some(Credentials::new("".to_string(), password))
+        Some(Credentials::new("".to_string(), Some(password)))
       },
       (None, None, false) => None,
       _ => fail!(CompoundError::UserError(Self::usage(&program, options_parser))),
