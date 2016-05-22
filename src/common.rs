@@ -5,6 +5,7 @@ use std::io::ErrorKind::*;
 use std::convert;
 use std::fmt;
 use std::error::Error;
+use hyper;
 
 pub type CompoundResult<T> = result::Result<T, CompoundError>;
 
@@ -59,13 +60,26 @@ impl fmt::Display for CompoundError {
   }
 }
 
+impl convert::From<hyper::error::Error> for CompoundError {
+  fn from(err: hyper::error::Error) -> CompoundError {
+    match err {
+      hyper::error::Error::Io(e) =>
+        convert::From::from(e),
+      hyper::error::Error::Uri(e) =>
+        CompoundError::UserError(format!("Invalid url ({})", e).to_string()),
+      e =>
+        CompoundError::BadResponse(format!("{}", e).to_string()),
+    }
+  }
+}
+
 impl convert::From<io::Error> for CompoundError {
   fn from(err: io::Error) -> CompoundError {
     match err.kind() {
       ConnectionRefused | ConnectionReset | ConnectionAborted | NotConnected | AddrInUse | AddrNotAvailable | TimedOut | Interrupted =>
-      CompoundError::ConnectionError(err),
+        CompoundError::ConnectionError(err),
       _ =>
-      CompoundError::IoError(err),
+        CompoundError::IoError(err),
     }
   }
 }

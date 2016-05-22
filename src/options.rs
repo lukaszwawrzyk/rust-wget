@@ -1,5 +1,5 @@
 use getopts::ParsingStyle;
-use url::Url;
+use hyper::Url;
 use common::{CompoundResult, CompoundError};
 use rpassword;
 use getopts;

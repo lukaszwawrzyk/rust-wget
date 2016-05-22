@@ -5,7 +5,7 @@ extern crate url;
 extern crate time;
 extern crate getopts;
 extern crate rpassword;
-extern crate rustc_serialize;
+extern crate hyper;
 
 #[macro_use]
 mod common;

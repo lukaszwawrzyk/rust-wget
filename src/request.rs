@@ -1,88 +1,66 @@
 extern crate url;
 
-use common::{CompoundResult, CompoundError};
-use std::net::TcpStream;
-use url::Url;
-use std::io::Write;
+use common::CompoundResult;
+use hyper::Url;
 use options::Options;
-use options::Credentials;
-use rustc_serialize::base64::*;
-use std::collections::HashMap;
 use common;
+use hyper::header::Headers;
+use hyper::header;
+use hyper::mime;
+use hyper::client::response::Response;
+use std::time::Duration;
+use hyper::client::{Client, RedirectPolicy};
 
 pub struct Request {
-  content: String,
 }
 
 impl Request {
-  pub fn send_default(socket: &mut TcpStream, url: &Url, options: &Options) -> CompoundResult<()> {
-    Self::build_and_send(socket, url, options, HashMap::new())
+  pub fn send_default(url: &Url, options: &Options) -> CompoundResult<Response> {
+    Self::build_and_send(url, options, Headers::new())
   }
 
-  pub fn send_with_range_from(socket: &mut TcpStream, url: &Url, options: &Options, range_from: u64) -> CompoundResult<()> {
-    let mut headers = HashMap::new();
-    headers.insert("Range".to_string(), format!("bytes={}-", range_from).to_string());
-    Self::build_and_send(socket, url, options, headers)
+  pub fn send_with_range_from(url: &Url, options: &Options, range_from: u64) -> CompoundResult<Response> {
+    let mut headers = Headers::new();
+    headers.set(header::Range::Bytes(vec![header::ByteRangeSpec::AllFrom(range_from)]));
+    Self::build_and_send(url, options, headers)
   }
 
-  fn build_and_send(socket: &mut TcpStream, url: &Url, options: &Options, special_headers: HashMap<String, String>) -> CompoundResult<()> {
-    let head_line = format!("GET {} HTTP/1.1", url.path()).to_string();
-
-    let mut headers: HashMap<String, String> = HashMap::new();
-
-    // basic headers
-    let host = try!(url.host_str().ok_or(CompoundError::UserError("No host found in url".to_owned())));
-    headers.insert("Host".to_string(), host.to_string());
-    headers.insert("Accept".to_string(), "*/*".to_string());
-
-    // credentials
+  fn build_and_send(url: &Url, options: &Options, special_headers: Headers) -> CompoundResult<Response> {
+    let mut basic_headers = Headers::new();
+    basic_headers.set(header::Accept(vec![header::qitem(mime::Mime(mime::TopLevel::Star, mime::SubLevel::Star, vec![]))]));
     if let Some(ref credentials) = options.credentials {
-      let auth_header = Self::format_auth_header(&credentials);
-      headers.insert("Authorization".to_string(), auth_header);
-    }
-
-    // additional headers (internal)
-    for (k, v) in special_headers {
-      headers.insert(k, v);
+      basic_headers.set(
+        header::Authorization(
+          header::Basic {
+            username: credentials.user.clone(),
+            password: Some(credentials.password.clone())
+          }
+        )
+      )
     }
 
     // headers from user that may override current
-    let extra_headers = common::parse_header_lines(&options.headers[..]);
-    for (k, v) in extra_headers {
-      headers.insert(k, v);
+    let extra_headers_raw = common::parse_header_lines(&options.headers[..]);
+    let mut extra_headers = Headers::new();
+    for (k, v) in extra_headers_raw {
+      extra_headers.set_raw(k, vec![v.into_bytes()]);
     }
 
-    let request = Self::format_request(head_line, headers);
-    request.send(socket)
+    let client = Self::create_client(options);
+    let mut request = client.get(url.clone());
+    request = request.headers(basic_headers);
+    request = request.headers(special_headers);
+    request = request.headers(extra_headers);
+
+    Ok(try!(request.send()))
   }
 
-  fn format_request(head_line: String, headers: HashMap<String, String>) -> Request {
-    let mut lines: Vec<String> = headers.iter().map(|(k, v)| format!("{}: {}", k, v).to_string()).collect();
-    lines.insert(0, head_line);
-    lines.push("\r\n".to_string());
-
-    Request {
-      content: lines.join("\r\n"),
-    }
-  }
-
-  fn format_auth_header(credentials: &Credentials) -> String {
-    let cred_str = format!("{}:{}", credentials.user, credentials.password);
-    let cred_bytes = cred_str.as_bytes();
-    let as_base64 = cred_bytes.to_base64(Config {
-        char_set: CharacterSet::Standard,
-        newline: Newline::CRLF,
-        pad: false,
-        line_length: None
-    });
-
-    format!("Basic {}", as_base64).to_string()
-  }
-
-  pub fn send(&self, socket: &mut TcpStream) -> CompoundResult<()> {
-    let bytes = self.content.as_bytes();
-    try!(socket.write(bytes));
-
-    Ok(())
+  fn create_client(options: &Options) -> Client {
+    let timeout = options.timeout_secs.map(Duration::from_secs);
+    let mut client = Client::new();
+    client.set_redirect_policy(RedirectPolicy::FollowNone);
+    client.set_read_timeout(timeout);
+    client.set_write_timeout(timeout);
+    client
   }
 }

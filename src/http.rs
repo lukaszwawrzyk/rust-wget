@@ -1,17 +1,17 @@
 use options::Options;
 use common::{CompoundResult, CompoundError};
 use std::path::{Path, PathBuf};
-use response::{Response, ResponseHead};
+use response::ResponseBuffer;
 use request::Request;
-use std::net::TcpStream;
-use url::Url;
+use hyper::Url;
 use std::fs;
-use std::result;
 use std::io;
 use std::io::Write;
 use progress::Progress;
 use std::fs::{File, OpenOptions};
-use std::time::Duration;
+use hyper::header;
+use hyper::status::{StatusCode, StatusClass};
+use hyper::client::response::Response;
 
 enum Status {
   AlreadyDownloaded,
@@ -58,8 +58,8 @@ impl Http {
         Err(error) => match error {
           CompoundError::ConnectionError(_) |
           CompoundError::TemporaryServerError =>
-          if tries_limited { tries += 1 },
-          fatal_error => fail!(fatal_error),
+            if tries_limited { tries += 1 },
+            fatal_error => fail!(fatal_error),
         },
       }
     }
@@ -67,55 +67,51 @@ impl Http {
     fail!(format!("Failed after {} tries", try_limit));
   }
 
-  fn try_download_one(&self, destination_path: &Path, progress: &mut Progress, url: &Url) -> CompoundResult<Status> {
-    let mut socket = try!(self.connect(url));
+// TODO readd print response
 
+  fn try_download_one(&self, destination_path: &Path, progress: &mut Progress, url: &Url) -> CompoundResult<Status> {
     return if Self::file_exists(destination_path) {
       let file_size = try!(Self::file_size(destination_path));
-      try!(Request::send_with_range_from(&mut socket, url, &self.options, file_size));
+      let response = try!(Request::send_with_range_from(url, &self.options, file_size));
 
-      let mut response = Response::new(socket);
-      let response_head = try!(response.read_head(self.options.show_response));
-
-      return match response_head.status_code {
-        416 => Ok(Status::AlreadyDownloaded),
-        206 => {
+      return match response.status {
+        StatusCode::RangeNotSatisfiable => Ok(Status::AlreadyDownloaded),
+        StatusCode::PartialContent => {
           if self.options.continue_download {
             progress.try_set_predownloaded(file_size);
           }
-          Self::download_body(response_head, response, || OpenOptions::new().append(true).open(destination_path), progress)
+          Self::download_body(response, || OpenOptions::new().append(true).open(destination_path), progress)
             .map(|_| Status::Success(destination_path.to_path_buf()))
         },
-        200 => if !self.options.continue_download {
-          Self::download_body(response_head, response, || File::create(destination_path), progress)
+        StatusCode::Ok => if !self.options.continue_download {
+          Self::download_body(response, || File::create(destination_path), progress)
             .map(|_| Status::Success(destination_path.to_path_buf()))
         } else {
           fail!(CompoundError::ServerDoesNotSupportContinuation)
         },
-        other => handle_errors_and_redirects(other, &response_head),
+        other => handle_errors_and_redirects(other, &response),
       }
     } else {
-      try!(Request::send_default(&mut socket, url, &self.options));
+      let response = try!(Request::send_default(url, &self.options));
 
-      let mut response = Response::new(socket);
-      let response_head = try!(response.read_head(self.options.show_response));
-
-      match response_head.status_code {
-        200 => Self::download_body(response_head, response, || File::create(destination_path), progress)
+      match response.status {
+        StatusCode::Ok => Self::download_body(response, || File::create(destination_path), progress)
           .map(|_| Status::Success(destination_path.to_path_buf())),
-        other => handle_errors_and_redirects(other, &response_head),
+        other => handle_errors_and_redirects(other, &response),
       }
     };
 
-    fn handle_errors_and_redirects(response_status: u16, response_head: &ResponseHead) -> CompoundResult<Status> {
-      match response_status {
-        301 | 302 | 303 | 307 | 308  => {
-          let redirect_url = try!(response_head.location().ok_or(CompoundError::BadResponse("Redirect response contains no Location header".to_string())));
+    fn handle_errors_and_redirects(response_status: StatusCode, response: &Response) -> CompoundResult<Status> {
+      match response_status.class() {
+        StatusClass::Redirection  => {
+          let redirect_url = try!(response.headers.get::<header::Location>()
+            .and_then(|loc| Url::parse(&loc.0).ok())
+            .ok_or(CompoundError::BadResponse("Redirect response contains no Location header".to_string())));
           Ok(Status::Redirect(redirect_url))
         },
-        status @ 400 ... 499 => fail!(CompoundError::BadResponse(format!("Status code {}", status).to_string())),
-        500 ... 511 => fail!(CompoundError::TemporaryServerError),
-        other => fail!(CompoundError::BadResponse(format!("Unknown status code {}", other).to_string())),
+        StatusClass::ClientError => fail!(CompoundError::BadResponse(format!("Status {}", response_status).to_string())),
+        StatusClass::ServerError => fail!(CompoundError::TemporaryServerError),
+        _ => fail!(CompoundError::BadResponse(format!("Unknown status code {}", response_status).to_string())),
       }
     }
   }
@@ -152,38 +148,29 @@ impl Http {
     self.options.continue_download && file_metadata.is_ok()
   }
 
-// todo fix error on unknown protocol
-  fn connect(&self, url: &Url) -> CompoundResult<TcpStream> {
-    fn default_port(url: &Url) -> result::Result<u16, ()> {
-      match url.scheme() {
-        "http" => Ok(80),
-        _ => Err(()),
-      }
-    }
-
-    let socket = try!(url.with_default_port(default_port).and_then(TcpStream::connect));
-    let timeout = self.options.timeout_secs.map(Duration::from_secs);
-    try!(socket.set_read_timeout(timeout));
-    try!(socket.set_write_timeout(timeout));
-
-    Ok(socket)
-  }
-
-  fn download_body<F, W: Write>(response_head: ResponseHead, mut response: Response, write_supplier: F, progress: &mut Progress) -> CompoundResult<()>
+  fn download_body<F, W: Write>(mut response: Response, write_supplier: F, progress: &mut Progress) -> CompoundResult<()>
   where F: Fn() -> io::Result<W> {
-    match response_head.content_length() {
+    let content_length_opt = response.headers.get::<header::ContentLength>().map(|len| len.0);
+    let is_chunked = match response.headers.get::<header::TransferEncoding>() {
+      Some(&header::TransferEncoding(ref encodings)) if encodings.contains(&header::Encoding::Chunked) => true,
+      _ => false,
+    };
+
+    match content_length_opt {
       Some(content_length) => {
         let mut destination = try!(write_supplier());
         progress.try_initialize_sized(content_length);
-        response.read_fixed_bytes(content_length, &mut destination, progress)
+        let mut source = ResponseBuffer::new();
+        source.read_fixed_bytes(&mut response, content_length, &mut destination, progress)
       },
       None => {
-        if response_head.is_chunked() {
+        if is_chunked {
           let mut destination = try!(write_supplier());
           progress.try_initialize_indeterminate();
-          response.read_chunked(&mut destination, progress)
+          let mut source = ResponseBuffer::new();
+          source.read_chunked(&mut response, &mut destination, progress)
         } else {
-          fail!(CompoundError::UnsupportedResponse)
+          fail!(CompoundError::UnsupportedResponse);
         }
       },
     }
@@ -192,9 +179,9 @@ impl Http {
   fn backup_file_name(&self, basic_name: &str) -> CompoundResult<String> {
     let dir = try!(fs::read_dir(Path::new("./")));
     let files: Vec<String> = dir
-    .flat_map(|r| r.ok())
-    .flat_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
-    .collect::<Vec<String>>();
+      .flat_map(|r| r.ok())
+      .flat_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
+      .collect::<Vec<String>>();
     if !files.contains(&basic_name.to_string()) {
       return Ok(basic_name.to_string());
     }
