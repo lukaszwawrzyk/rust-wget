@@ -111,7 +111,8 @@ impl Progress {
     let bytes_read = current_progress.bytes_read;
 
     let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
-    let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
+    let secs_elapsed = time_elapsed.num_seconds() as u64;
+    let bytes_per_sec = safe_div_u64!(bytes_read, secs_elapsed);
 
     match self.total_size {
       Some(total_size) => {
@@ -136,7 +137,7 @@ impl Progress {
           Self::human_readable_duration(&time_left));
       },
       None => {
-        let indeterminate_status_bar_str = self.indeterminate_status_bar(time_elapsed.num_seconds() as u64);
+        let indeterminate_status_bar_str = self.indeterminate_status_bar(secs_elapsed);
 
         print!("\r[{}] {: >8} {: >8}/s elapsed: {}",
           indeterminate_status_bar_str,
