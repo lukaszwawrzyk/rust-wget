@@ -107,19 +107,19 @@ impl Progress {
   }
 
   fn show_status(&self) -> () {
+    let current_progress = self.steps.iter().fold(ZERO_STEP, |acc, el| &acc + el);
+    let bytes_read = current_progress.bytes_read;
+
+    let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
+    let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
+
     match self.total_size {
       Some(total_size) => {
-        let current_progress = self.steps.iter().fold(ZERO_STEP, |acc, el| &acc + el);
-
-        let bytes_read = current_progress.bytes_read;
         let bytes_total = total_size;
         let bytes_left = bytes_total - bytes_read - self.predownloaded_size.unwrap_or(0);
 
         let new_progress_percent: f32 = 100f32 * safe_div_f32!(bytes_read as f32, bytes_total as f32);
         let overall_progress_percent: f32 = 100f32 * safe_div_f32!(bytes_read as f32 + self.predownloaded_size.unwrap_or(0) as f32, bytes_total as f32);
-        let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
-
-        let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
 
         let secs_left = safe_div_u64!(bytes_left, bytes_per_sec);
         let time_left = Duration::seconds(secs_left as i64);
@@ -136,12 +136,6 @@ impl Progress {
           Self::human_readable_duration(&time_left));
       },
       None => {
-        let current_progress = self.steps.iter().fold(ZERO_STEP, |acc, el| &acc + el);
-
-        let bytes_read = current_progress.bytes_read;
-        let time_elapsed = Duration::nanoseconds(current_progress.duration_ns as i64);
-        let bytes_per_sec = safe_div_u64!(bytes_read, time_elapsed.num_seconds() as u64);
-
         let indeterminate_status_bar_str = self.indeterminate_status_bar(time_elapsed.num_seconds() as u64);
 
         print!("\r[{}] {: >8} {: >8}/s elapsed: {}",
