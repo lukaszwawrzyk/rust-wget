@@ -10,18 +10,20 @@ pub struct ResponseBuffer {
 }
 
 impl ResponseBuffer {
-  pub fn new() -> ResponseBuffer {
+  fn new() -> ResponseBuffer {
     ResponseBuffer {
       buffer: [0; BUFFER_SIZE],
     }
   }
 
-  pub fn read_chunked<R: Read>(&mut self, source: &mut R, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
-    self.read_bytes(source, None, destination, progress)
+  pub fn read_chunked<R: Read>(source: &mut R, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
+    let mut buffer = Self::new();
+    buffer.read_bytes(source, None, destination, progress)
   }
 
-  pub fn read_fixed_bytes<R: Read>(&mut self, source: &mut R, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
-    self.read_bytes(source, Some(expected_length), destination, progress)
+  pub fn read_fixed_bytes<R: Read>(source: &mut R, expected_length: u64, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {
+    let mut buffer = Self::new();
+    buffer.read_bytes(source, Some(expected_length), destination, progress)
   }
 
   fn read_bytes<R: Read>(&mut self, source: &mut R, expected_length_opt: Option<u64>, destination: &mut Write, progress: &mut Progress) -> CompoundResult<()> {

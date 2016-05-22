@@ -25,6 +25,7 @@ pub struct Http {
 
 // todo fix ++ bug
 // todo slow down progress refresh
+// todo test retries
 
 const DEFAULT_FILE_NAME: &'static str = "out";
 
@@ -60,18 +61,16 @@ impl Http {
           Status::Redirect(ref new_url) => return self.download_one_recursive(new_url, progress, tries),
         },
         Err(error) => match error {
-          CompoundError::ConnectionError(_) |
-          CompoundError::TemporaryServerError =>
+          CompoundError::ConnectionError(_) | CompoundError::TemporaryServerError =>
             if tries_limited { tries += 1 },
-            fatal_error => fail!(fatal_error),
+          fatal_error =>
+            fail!(fatal_error),
         },
       }
     }
 
     fail!(format!("Failed after {} tries", try_limit));
   }
-
-// TODO readd print response
 
   fn try_download_one(&self, destination_path: &Path, progress: &mut Progress, url: &Url) -> CompoundResult<Status> {
     return if Self::file_exists(destination_path) {
@@ -85,12 +84,10 @@ impl Http {
           if self.options.continue_download {
             progress.try_set_predownloaded(file_size);
           }
-          Self::download_body(response, || OpenOptions::new().append(true).open(destination_path), progress)
-            .map(|_| Status::Success(destination_path.to_path_buf()))
+          Self::download_body(response, || OpenOptions::new().append(true).open(destination_path), progress, destination_path)
         },
         StatusCode::Ok => if !self.options.continue_download {
-          Self::download_body(response, || File::create(destination_path), progress)
-            .map(|_| Status::Success(destination_path.to_path_buf()))
+          Self::download_body(response, || File::create(destination_path), progress, destination_path)
         } else {
           fail!(CompoundError::ServerDoesNotSupportContinuation)
         },
@@ -101,8 +98,7 @@ impl Http {
       self.maybe_show_response(&response);
 
       match response.status {
-        StatusCode::Ok => Self::download_body(response, || File::create(destination_path), progress)
-          .map(|_| Status::Success(destination_path.to_path_buf())),
+        StatusCode::Ok => Self::download_body(response, || File::create(destination_path), progress, destination_path),
         other => handle_errors_and_redirects(other, &response),
       }
     };
@@ -110,15 +106,19 @@ impl Http {
     fn handle_errors_and_redirects(response_status: StatusCode, response: &Response) -> CompoundResult<Status> {
       match response_status.class() {
         StatusClass::Redirection  => {
-          let redirect_url = try!(response.headers.get::<header::Location>()
-            .and_then(|loc| Url::parse(&loc.0).ok())
-            .ok_or(CompoundError::BadResponse("Redirect response contains no Location header".to_string())));
+          let redirect_url = try!(extract_redirect_url(response));
           Ok(Status::Redirect(redirect_url))
         },
         StatusClass::ClientError => fail!(CompoundError::BadResponse(format!("Status {}", response_status).to_string())),
         StatusClass::ServerError => fail!(CompoundError::TemporaryServerError),
         _ => fail!(CompoundError::BadResponse(format!("Unknown status code {}", response_status).to_string())),
       }
+    }
+
+    fn extract_redirect_url(response: &Response) -> CompoundResult<Url> {
+      response.headers.get::<header::Location>()
+        .and_then(|loc| Url::parse(&loc.0).ok())
+        .ok_or(CompoundError::BadResponse("Redirect response contains no Location header".to_string()))
     }
   }
 
@@ -161,7 +161,7 @@ impl Http {
     self.options.continue_download && file_metadata.is_ok()
   }
 
-  fn download_body<F, W: Write>(mut response: Response, write_supplier: F, progress: &mut Progress) -> CompoundResult<()>
+  fn download_body<F, W: Write>(mut response: Response, write_supplier: F, progress: &mut Progress, destination_path: &Path) -> CompoundResult<Status>
   where F: Fn() -> io::Result<W> {
     let content_length_opt = response.headers.get::<header::ContentLength>().map(|len| len.0);
     let is_chunked = match response.headers.get::<header::TransferEncoding>() {
@@ -173,20 +173,18 @@ impl Http {
       Some(content_length) => {
         let mut destination = try!(write_supplier());
         progress.try_initialize_sized(content_length);
-        let mut source = ResponseBuffer::new();
-        source.read_fixed_bytes(&mut response, content_length, &mut destination, progress)
+        ResponseBuffer::read_fixed_bytes(&mut response, content_length, &mut destination, progress)
       },
       None => {
         if is_chunked {
           let mut destination = try!(write_supplier());
           progress.try_initialize_indeterminate();
-          let mut source = ResponseBuffer::new();
-          source.read_chunked(&mut response, &mut destination, progress)
+          ResponseBuffer::read_chunked(&mut response, &mut destination, progress)
         } else {
           fail!(CompoundError::UnsupportedResponse);
         }
       },
-    }
+    }.map(|_| Status::Success(destination_path.to_path_buf()))
   }
 
   fn backup_file_name(&self, basic_name: &str) -> CompoundResult<String> {
