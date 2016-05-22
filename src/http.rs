@@ -24,8 +24,6 @@ pub struct Http {
   options: Options,
 }
 
-// todo test extra headers
-
 impl Http {
   pub fn new(options: Options) -> Http {
     Http { options: options }
