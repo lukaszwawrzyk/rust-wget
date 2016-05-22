@@ -14,6 +14,7 @@ mod response;
 mod progress;
 mod options;
 mod http;
+mod path_resolve;
 
 use options::Options;
 use std::env;

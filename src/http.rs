@@ -12,6 +12,7 @@ use std::fs::{File, OpenOptions};
 use hyper::header;
 use hyper::status::{StatusCode, StatusClass};
 use hyper::client::response::Response;
+use path_resolve::get_destination_path;
 
 enum Status {
   AlreadyDownloaded,
@@ -26,8 +27,6 @@ pub struct Http {
 // todo fix ++ bug
 // todo slow down progress refresh
 // todo test retries
-
-const DEFAULT_FILE_NAME: &'static str = "out";
 
 impl Http {
   pub fn new(options: Options) -> Http {
@@ -47,7 +46,7 @@ impl Http {
   }
 
   fn download_one_recursive(&self, url: &Url, progress: &mut Progress, initial_tries: u64) -> CompoundResult<String> {
-    let destination_path = try!(self.get_destination_path(url));
+    let destination_path = try!(get_destination_path(url, &self.options));
 
     let tries_limited = self.options.tries.is_some();
     let try_limit = self.options.tries.unwrap_or(0);
@@ -138,29 +137,6 @@ impl Http {
     Ok(size)
   }
 
-  fn get_destination_path(&self, url: &Url) -> CompoundResult<PathBuf> {
-    let basic_file_name = Self::file_name_from_url(url);
-    if self.should_continue_download(&basic_file_name) {
-      Ok(PathBuf::from(&basic_file_name))
-    } else {
-      Ok(PathBuf::from(try!(self.backup_file_name(&basic_file_name))))
-    }
-  }
-
-  fn file_name_from_url(url: &Url) -> String {
-    url.path_segments()
-    .and_then(|segments| segments.last())
-    .map(|s| s.to_string())
-    .and_then(|s| if s.is_empty() { None } else { Some(s) })
-    .unwrap_or(DEFAULT_FILE_NAME.to_string())
-  }
-
-  fn should_continue_download(&self, file_name: &str) -> bool {
-    let file_metadata = fs::metadata(Path::new(file_name));
-
-    self.options.continue_download && file_metadata.is_ok()
-  }
-
   fn download_body<F, W: Write>(mut response: Response, write_supplier: F, progress: &mut Progress, destination_path: &Path) -> CompoundResult<Status>
   where F: Fn() -> io::Result<W> {
     let content_length_opt = response.headers.get::<header::ContentLength>().map(|len| len.0);
@@ -185,62 +161,5 @@ impl Http {
         }
       },
     }.map(|_| Status::Success(destination_path.to_path_buf()))
-  }
-
-  fn backup_file_name(&self, basic_name: &str) -> CompoundResult<String> {
-    let dir = try!(fs::read_dir(Path::new("./")));
-    let files: Vec<String> = dir
-      .flat_map(|r| r.ok())
-      .flat_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
-      .collect::<Vec<String>>();
-    if !files.contains(&basic_name.to_string()) {
-      return Ok(basic_name.to_string());
-    }
-
-    let prefix: &str = &format!("{}.", basic_name);
-    let mut current_indices: Vec<u64> = files.iter()
-    .filter(|s| s.starts_with(prefix))
-    .map(|s| (&s[(basic_name.len() + 1)..]).to_string())
-    .flat_map(|s| s.parse::<u64>().ok())
-    .collect();
-    current_indices.sort();
-
-    match self.options.backup_limit {
-      None => {
-        let next_index = (1..).zip(current_indices.iter())
-        .find(|&(expected_index, &actual_index)| actual_index > expected_index)
-        .map(|(free_index, _)| free_index)
-        .unwrap_or(current_indices.len() as u64 + 1);
-
-        Ok(format!("{}.{}", basic_name, next_index).to_string())
-      },
-      Some(limit) => {
-        let missing_index = (1..(limit + 1)).zip(current_indices.iter())
-        .find(|&(expected_index, &actual_index)| actual_index > expected_index)
-        .map(|(free_index, _)| free_index);
-
-        match missing_index {
-          Some(next_index) => Ok(format!("{}.{}", basic_name, next_index).to_string()),
-          None => {
-            try!(Self::shift_names(basic_name, limit));
-            Ok(basic_name.to_string())
-          },
-        }
-      },
-    }
-  }
-
-  fn shift_names(basic_name: &str, limit: u64) -> io::Result<()> {
-    try!(fs::remove_file(to_path(basic_name, limit)));
-    for i in (1..limit).rev() {
-      try!(fs::rename(to_path(basic_name, i), to_path(basic_name, i + 1)));
-    }
-    try!(fs::rename(Path::new(basic_name), to_path(basic_name, 1)));
-    return Ok(());
-
-    fn to_path(basic_name: &str, num: u64) -> PathBuf {
-      let name = format!("{}.{}", basic_name, num);
-      PathBuf::from(name)
-    }
   }
 }
