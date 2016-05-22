@@ -28,28 +28,7 @@ fn main() {
     http.download_all()
   });
 
-  match result {
-    Ok(msg) => println!("\n{}", msg),
-    Err(e) => println!("\n{}", e),
+  if let Err(e) = result {
+    println!("\n{}", e);
   }
 }
-
-// TODO check https
-// TODO show progress in %, kb of all, speed
-// TODO if range request is sent to server with chunked encoding it will send 200 + Content-Length 0 but no chunked header but message still will be chunked - handle this
-
-/*
-HTTPS
-
-logi:
-
-Translacja fly.srk.fer.hr (fly.srk.fer.hr)... 80.241.220.122
-Łączenie się z fly.srk.fer.hr (fly.srk.fer.hr)|80.241.220.122|:80... połączono.
-Żądanie HTTP wysłano, oczekiwanie na odpowiedź... 200 OK
-Długość: 1410 (1,4K) [text/html]
-Zapis do: `fly.srk.fer.hr/index.html'
-
-     0K .                                                     100%  214M=0s
-
-
-*/

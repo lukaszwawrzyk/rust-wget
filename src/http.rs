@@ -23,17 +23,21 @@ pub struct Http {
   options: Options,
 }
 
+// todo fix ++ bug
+// todo slow down progress refresh
+
 const DEFAULT_FILE_NAME: &'static str = "out";
 
 impl Http {
   pub fn new(options: Options) -> Http {
-    Http {
-      options: options,
-    }
+    Http { options: options }
   }
 
-  pub fn download_all(&self) -> CompoundResult<String> {
-    self.download_one(&self.options.urls[0])
+  pub fn download_all(&self) -> CompoundResult<()> {
+    for url in &self.options.urls {
+      println!("\n{}", try!(self.download_one(url)));
+    }
+    Ok(())
   }
 
   fn download_one(&self, url: &Url) -> CompoundResult<String> {
