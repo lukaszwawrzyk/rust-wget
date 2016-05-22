@@ -50,7 +50,7 @@ impl fmt::Display for CompoundError {
       CompoundError::TemporaryServerError => "Temporary server error (5xx)".to_string(),
       CompoundError::UnsupportedResponse => "Unsupported response. Supported response must be either chunked or have Content-Length".to_string(),
       CompoundError::ServerDoesNotSupportContinuation => "Server does not support range header".to_string(),
-      CompoundError::UserError(ref msg) => format!("User error: {}", msg).to_string(),
+      CompoundError::UserError(ref msg) => format!("{}", msg).to_string(),
       CompoundError::BadResponse(ref msg) => format!("Bad response: {}", msg).to_string(),
       CompoundError::ConnectionError(ref err) => format!("Connection error: {}", err.to_string()).to_string(),
       CompoundError::IoError(ref err) => format!("IO Error: {}", err.to_string()).to_string(),

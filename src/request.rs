@@ -16,20 +16,18 @@ pub struct Request {
 
 impl Request {
   pub fn send_default(url: &Url, options: &Options) -> CompoundResult<Response> {
-    Self::build_and_send(url, options, Headers::new())
+    Self::build_and_send(url, options, None)
   }
 
   pub fn send_with_range_from(url: &Url, options: &Options, range_from: u64) -> CompoundResult<Response> {
-    let mut headers = Headers::new();
-    headers.set(header::Range::Bytes(vec![header::ByteRangeSpec::AllFrom(range_from)]));
-    Self::build_and_send(url, options, headers)
+    Self::build_and_send(url, options, Some(header::Range::Bytes(vec![header::ByteRangeSpec::AllFrom(range_from)])))
   }
 
-  fn build_and_send(url: &Url, options: &Options, special_headers: Headers) -> CompoundResult<Response> {
-    let mut basic_headers = Headers::new();
-    basic_headers.set(header::Accept(vec![header::qitem(mime::Mime(mime::TopLevel::Star, mime::SubLevel::Star, vec![]))]));
+  fn build_and_send(url: &Url, options: &Options, special_header: Option<header::Range>) -> CompoundResult<Response> {
+    let mut headers = Headers::new();
+    headers.set(header::Accept(vec![header::qitem(mime::Mime(mime::TopLevel::Star, mime::SubLevel::Star, vec![]))]));
     if let Some(ref credentials) = options.credentials {
-      basic_headers.set(
+      headers.set(
         header::Authorization(
           header::Basic {
             username: credentials.user.clone(),
@@ -39,18 +37,16 @@ impl Request {
       )
     }
 
+    special_header.map(|header| headers.set(header));
+
     // headers from user that may override current
     let extra_headers_raw = common::parse_header_lines(&options.headers[..]);
-    let mut extra_headers = Headers::new();
     for (k, v) in extra_headers_raw {
-      extra_headers.set_raw(k, vec![v.into_bytes()]);
+      headers.set_raw(k, vec![v.into_bytes()]);
     }
 
     let client = Self::create_client(options);
-    let mut request = client.get(url.clone());
-    request = request.headers(basic_headers);
-    request = request.headers(special_headers);
-    request = request.headers(extra_headers);
+    let request = client.get(url.clone()).headers(headers);
 
     Ok(try!(request.send()))
   }

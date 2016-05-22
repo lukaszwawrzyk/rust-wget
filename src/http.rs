@@ -73,6 +73,7 @@ impl Http {
     return if Self::file_exists(destination_path) {
       let file_size = try!(Self::file_size(destination_path));
       let response = try!(Request::send_with_range_from(url, &self.options, file_size));
+      self.maybe_show_response(&response);
 
       return match response.status {
         StatusCode::RangeNotSatisfiable => Ok(Status::AlreadyDownloaded),
@@ -93,6 +94,7 @@ impl Http {
       }
     } else {
       let response = try!(Request::send_default(url, &self.options));
+      self.maybe_show_response(&response);
 
       match response.status {
         StatusCode::Ok => Self::download_body(response, || File::create(destination_path), progress)
@@ -113,6 +115,13 @@ impl Http {
         StatusClass::ServerError => fail!(CompoundError::TemporaryServerError),
         _ => fail!(CompoundError::BadResponse(format!("Unknown status code {}", response_status).to_string())),
       }
+    }
+  }
+
+  fn maybe_show_response(&self, response: &Response) -> () {
+    if self.options.show_response {
+      println!("{} {}", response.version, response.status);
+      println!("{}", response.headers);
     }
   }
 
