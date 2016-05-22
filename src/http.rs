@@ -152,6 +152,7 @@ impl Http {
     self.options.continue_download && file_metadata.is_ok()
   }
 
+// todo fix error on unknown protocol
   fn connect(&self, url: &Url) -> CompoundResult<TcpStream> {
     fn default_port(url: &Url) -> result::Result<u16, ()> {
       match url.scheme() {

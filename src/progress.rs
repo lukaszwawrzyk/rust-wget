@@ -144,7 +144,11 @@ impl Progress {
 
         let status_bar_str = self.status_bar(time_elapsed.num_seconds() as u64);
 
-        print!("\r[{}] {}/? bytes {}B/s elapsed: {}", status_bar_str, bytes_read, bytes_per_sec, time_elapsed);
+        print!("\r[{}] {: >8} {: >8}/s elapsed: {}",
+          status_bar_str,
+          Self::human_readable_bytes(bytes_read),
+          Self::human_readable_bytes(bytes_per_sec),
+          Self::human_readable_duration(&time_elapsed));
       }
     }
   }
@@ -181,7 +185,7 @@ impl Progress {
     let mut bar_buffer: [char; PROGRESS_BAR_SIZE] = [' '; PROGRESS_BAR_SIZE];
     let indicator_center_position = cmp::min(((time_elapsed as i64 % (PROGRESS_BAR_SIZE as i64 * 2)) - PROGRESS_BAR_SIZE as i64 + 1).abs() as usize, PROGRESS_BAR_SIZE - 1);
 
-    bar_buffer[indicator_center_position as usize] = '+';
+    bar_buffer[indicator_center_position as usize] = '=';
     if indicator_center_position as i32 - 1 >= 0 {
       bar_buffer[indicator_center_position as usize - 1] = '<'
     }
