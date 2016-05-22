@@ -136,19 +136,19 @@ impl Options {
     opts.optflag("h", "help", "Show this help menu");
     opts.optflag("c", "continue", "Continue getting a partially-downloaded file");
     opts.optflag("S", "server-response", "Print the headers sent by HTTP servers");
-    opts.optflag("", "ask-password", "Prompt for a password for each connection established");
-    opts.optopt("t", "tries", "Set number of tries to number. Specify 0 for infinite retrying.", "NUMBER");
-    opts.optopt("T", "timeout", "Set the network timeout to seconds seconds", "SECONDS");
-    opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to backups (and lost beyond that).", "BACKUPS");
-    opts.optopt("", "user", "Specify the username for HTTP file retrieval", "USER");
-    opts.optopt("", "password", "Specify the password for HTTP file retrieval", "PASSWORD");
+    opts.optopt("t", "tries", "Set number of tries to NUMBER. Specify 0 for infinite retrying.", "NUMBER");
+    opts.optopt("T", "timeout", "Set the network timeout to SECONDS seconds", "SECONDS");
+    opts.optopt("", "backups", "Before (over)writing a file, back up an existing file by adding a .1 suffix to the file name. Such backup files are rotated to .2, .3, and so on, up to BACKUPS (and lost beyond that).", "BACKUPS");
+    opts.optopt("", "user", "Specify the username for file retrieval", "USER");
+    opts.optopt("", "password", "Specify the password for file retrieval", "PASSWORD");
+    opts.optflag("", "ask-password", "Prompt for a password instead of using explicit password with password option");
     opts.optmulti("", "header", "Send header-line along with the rest of the headers in each HTTP request", "HEADER-LINE");
 
     return opts;
   }
 
   fn usage(program: &str, opts: getopts::Options) -> String {
-    let brief = format!("Usage: {} [options] URL", program);
+    let brief = format!("Usage: {} [options] URL...", program);
     return opts.usage(&brief).to_string();
   }
 }
