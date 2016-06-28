@@ -64,7 +64,7 @@ impl Request {
     header_lines.into_iter().flat_map(|line| {
       let splitted: Vec<&str> = line.split(": ").collect();
       match &splitted[..] {
-        [key, value] => Some((key.to_string(), value.to_string())),
+        &[key, value] => Some((key.to_string(), value.to_string())),
         _ => None
       }
     }).collect()

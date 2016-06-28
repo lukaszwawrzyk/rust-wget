@@ -51,15 +51,16 @@ fn backup_file_name(basic_name: &str, options: &Options) -> CompoundResult<Strin
   match options.backup_limit {
     None => {
       let next_index = (1..).zip(current_indices.iter())
-      .find(|&(expected_index, &actual_index)| actual_index > expected_index)
+      .find(|&(expected_index, &actual_index)| expected_index < actual_index)
       .map(|(free_index, _)| free_index)
       .unwrap_or(current_indices.len() as u64 + 1);
 
       Ok(format!("{}.{}", basic_name, next_index).to_string())
     },
     Some(limit) => {
+      current_indices.push(limit + 1);
       let missing_index = (1..(limit + 1)).zip(current_indices.iter())
-      .find(|&(expected_index, &actual_index)| actual_index > expected_index)
+      .find(|&(expected_index, &actual_index)| expected_index < actual_index)
       .map(|(free_index, _)| free_index);
 
       match missing_index {
